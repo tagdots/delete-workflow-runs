@@ -1,0 +1,170 @@
+---
+
+name: CI
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+
+    branches:
+      - main
+
+    types:
+      - edited
+      - opened
+      - synchronize
+
+  push:
+    branches:
+      - test-*
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+
+  pre-commit:
+    uses: ./.github/workflows/reusable-pre-commit.yaml
+
+  build-test:
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    uses: ./.github/workflows/reusable-build-test.yaml
+
+  codeql:
+    if: ${{ github.event.repository.visibility == 'public' }}
+
+    permissions:
+      actions: write
+      contents: write
+      security-events: write
+
+    uses: ./.github/workflows/reusable-codeql.yaml
+
+  dependency:
+    if: ${{ github.event.repository.visibility == 'public' && (github.event_name == 'pull_request' || github.event.workflow_run.event == 'pull_request')}}
+    uses: ./.github/workflows/reusable-dependency-review.yaml
+
+  validate-release:
+    needs: [pre-commit, build-test, dependency, codeql]
+
+    # needs are not evaluated properly before the steps kicks in.  Therefore, always() must be here.
+    if: ${{ always() && startsWith(github.head_ref, 'release/') && needs.pre-commit.result == 'success' && needs.build-test.result == 'success' && contains(fromJSON('["success", "skipped"]'), needs.codeql.result) && contains(fromJSON('["success", "skipped"]'), needs.dependency.result) }}
+
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_HEAD_REF: ${{ github.head_ref }}
+      GITHUB_SPEC_VER: ${GITHUB_HEAD_REF#release/}
+
+    steps:
+
+    - name: Checkout source code
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+    - id: set-release-branch
+      shell: bash
+      run: |
+        # set release branch info to job output
+        echo "GITHUB_HEAD_REF=$GITHUB_HEAD_REF" >> "$GITHUB_OUTPUT"
+        echo "GITHUB_SPEC_VER=$GITHUB_SPEC_VER" >> "$GITHUB_OUTPUT"
+
+    - shell: bash
+      run: |
+        # get output variables
+        echo "Release Branch Name         : ${{ steps.set-release-branch.outputs.GITHUB_HEAD_REF }}"
+        echo "Release Branch Spec Version : ${{ steps.set-release-branch.outputs.GITHUB_SPEC_VER }}"
+        echo "Software Build Version      : ${{ needs.build-test.outputs.BUILD_VERSION }}"
+        echo "Workflow Run ID             : ${{ needs.build-test.outputs.WORKFLOW_RUN_ID }}"
+        echo "Uploaded Artifact ID        : ${{ needs.build-test.outputs.ARTIFACT_ID }}"
+
+    - name: Download distributions
+      if: ${{ github.event.repository.language == 'Python' }}
+      id: artifact-download
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 #v4.3.0
+      with:
+        artifact-ids: "${{ needs.build-test.outputs.ARTIFACT_ID }}"
+        run-id: "${{ needs.build-test.outputs.WORKFLOW_RUN_ID }}"
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path: dist/
+
+    - shell: bash
+      if: ${{ github.event.repository.language == 'Python' }}
+      run: |
+        # check artifacts located inside dist/artifact/
+        tree .
+
+    # --- release validation starts from here --- #
+    - shell: bash
+      run: |
+        # validate that release branch specified version matches release specification
+        # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+        REGEX="^[0-9]+\.[0-9]+\.[0-9]+$"
+        if [[ ! "${{steps.set-release-branch.outputs.GITHUB_SPEC_VER}}" =~ $REGEX ]]; then
+          echo "Error: Release Branch Specified Version does not match Release Specification (Major.Minior.Patch)."
+          exit 1
+        fi
+
+    - shell: bash
+      run: |
+        # validate that release branch specified version AND software build version are the same
+        if [ "${{ needs.build-test.outputs.BUILD_VERSION}}" != "${{steps.set-release-branch.outputs.GITHUB_SPEC_VER}}" ]; then
+          echo "Error: Release Branch Specified Version is different from Software Build Version."
+          exit 1
+        fi
+
+    - shell: bash
+      run: |
+        # validate that release version tag has not been created.
+        TAG_EXIST="$(git ls-remote origin refs/tags/${{ needs.build-test.outputs.BUILD_VERSION }} | awk '{print $2}' | sed 's/refs\/tags\///g')"
+        if [ -n "$TAG_EXIST" ]; then
+          echo "Error: Tag ($TAG_EXIST) exists already at remote origin."
+          exit 1
+        fi
+    # --- release validation ends here --- #
+
+  notify-slack:
+    if: always()
+    needs: [pre-commit, build-test, codeql, dependency, validate-release]
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      WORKFLOW_RESULT: ${{ steps.get-previous-jobs-results.outputs.WORKFLOW_RESULT }}
+
+    steps:
+
+    - name: Get Overall Jobs Results
+      id: get-overall-jobs-results
+      shell: bash
+      run: |
+        # get overall result from all of the previous jobs
+        if "${{ needs.pre-commit.result == 'success' && needs.build-test.result == 'success' && contains(fromJSON('["success", "skipped"]'), needs.codeql.result) && contains(fromJSON('["success", "skipped"]'), needs.dependency.result) && contains(fromJSON('["success", "skipped"]'), needs.validate-release.result) }}"; then
+          echo "WORKFLOW_RESULT=:white_check_mark:" >> "$GITHUB_OUTPUT"
+        else
+          echo "WORKFLOW_RESULT=:no_entry:" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Post message to Slack
+      uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+      with:
+        method: chat.postMessage
+        token: "${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}"
+        payload: |
+          channel: "${{ secrets.SECRET_SLACK_CHANNEL_CICD }}"
+          text: "
+              *Repository: ${{ github.repository }}*\n
+              *Workflow : ${{ github.workflow }} ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}*
+              ```
+              URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n
+              Job: pre-commit       - ${{ needs.pre-commit.result }}\n
+              Job: build-test       - ${{ needs.build-test.result }}\n
+              Job: codeql           - ${{ needs.codeql.result }}\n
+              Job: dependency       - ${{ needs.dependency.result }}\n
+              Job: validate-release - ${{ needs.validate-release.result }}
+              ```"
