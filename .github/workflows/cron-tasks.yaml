@@ -1,0 +1,144 @@
+---
+
+name: cron-tasks
+
+on:
+  schedule:
+    - cron: '30 3 * * 0'
+
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.12.x'
+
+permissions:
+    actions: read
+    contents: read
+    issues: read
+    pull-requests: read
+
+jobs:
+  badge-demo: # https://github.com/tagdots/setup-badge-action
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - id: badge-demo
+      uses: tagdots/setup-badge-action@d450907c2ddc3c94b5eaed20f521eb4846475937 # 1.0.4
+
+  stale-workflows: # https://github.com/Mattraks/delete-workflow-runs
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+    - name: Run stale-workflows
+      id: stale-workflows
+      uses: Mattraks/delete-workflow-runs@39f0bbed25d76b34de5594dceab824811479e5de # v2.0.6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}
+        retain_days: 5
+        keep_minimum_runs: 8
+
+  stale-issues-prs: # https://github.com/actions/stale
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+    - name: Run stale-issues-prs
+      id: stale-issues-prs
+      uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
+      with:
+        stale-issue-message: 'This issue is stale because it has been open 5 days with no activity. Remove stale label or comment or this will be closed in 3 days after stale'
+        days-before-stale: 5
+        days-before-close: 3
+        operations-per-run: 40
+
+  stale-branches: # https://github.com/crs-k/stale-branches
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+      contents: write
+      pull-requests: read
+
+    steps:
+    - name: Run stale-branches
+      id: stale-branches
+      uses: crs-k/stale-branches@de68d9358068be991f64ad9058487e2484925d9a # v8.2.1
+      with:
+        # days-before-stale cannot be greater than or equal to days-before-delete
+        branches-filter-regex: '^((?!main|badge))'
+        days-before-stale: 4
+        days-before-delete: 6
+        include-protected-branches: true
+        pr-check: true
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+  update-pre-commit: # https://github.com/tagdots/update-pre-commit-action
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - name: Run update-pre-commit
+      id: update-pre-commit
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: tagdots/update-pre-commit-action@c1b9f2cb98f920a06a99172d09af349bf783f3d9 # 1.0.20
+      with:
+        file: .pre-commit-config.yaml
+        dry-run: false
+        open-pr: true
+
+  notify-slack:
+    if: always()
+    needs: [badge-demo, stale-workflows, stale-issues-prs, stale-branches, update-pre-commit]
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      WORKFLOW_RESULT: ${{ steps.get-previous-jobs-results.outputs.WORKFLOW_RESULT }}
+
+    steps:
+    - name: Get Overall Jobs Results
+      id: get-overall-jobs-results
+      shell: bash
+      run: |
+        # get overall result from all of the previous jobs
+        if "${{ needs.badge-demo.result == 'success' && needs.stale-workflows.result == 'success' && needs.stale-issues-prs.result == 'success' && needs.stale-branches.result == 'success' && needs.update-pre-commit.result == 'success' }}"; then
+          echo "WORKFLOW_RESULT=:white_check_mark:" >> "$GITHUB_OUTPUT"
+        else
+          echo "WORKFLOW_RESULT=:no_entry:" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Post message to Slack
+      uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+      with:
+        method: chat.postMessage
+        token: "${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}"
+        payload: |
+          channel: "${{ secrets.SECRET_SLACK_CHANNEL_CRON_TASKS }}"
+          text: "
+              *Repository: ${{ github.repository }}*\n
+              *Workflow : ${{ github.workflow }} ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}*
+              ```
+              URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n
+              Job: badge-demo        - ${{ needs.badge-demo.result }}\n
+              Job: stale-workflows   - ${{ needs.stale-workflows.result }}\n
+              Job: stale-issues-prs  - ${{ needs.stale-issues-prs.result }}\n
+              Job: stale-branches    - ${{ needs.stale-branches.result }}\n
+              Job: update-pre-commit - ${{ needs.update-pre-commit.result }}
+              ```"
