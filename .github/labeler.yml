@@ -1,0 +1,31 @@
+---
+# NOTE: this file is managed by terraform
+
+feature:
+  - head-branch: ['^feature']
+
+enhancement:
+  - head-branch: ['^perf']
+  - head-branch: ['^refactor']
+
+bugfix:
+  - head-branch: ['^bugfix']
+
+hotfix:
+  - head-branch: ['^hotfix']
+
+fix:
+  - head-branch: ['^fix']
+
+build:
+  - head-branch: ['^build']
+  - head-branch: ['^ci']
+
+documentation:
+  - head-branch: ['^docs']
+
+style:
+  - head-branch: ['^style']
+
+test:
+  - head-branch: ['^test']
