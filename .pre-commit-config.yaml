@@ -1,0 +1,80 @@
+repos:
+- repo: https://github.com/python-jsonschema/check-jsonschema
+  rev: 0.33.2
+  hooks:
+  - name: Check GitHub Actions Workflows
+    id: check-github-workflows
+    args:
+    - --verbose
+- repo: https://github.com/hadolint/hadolint
+  rev: v2.12.0
+  hooks:
+  - name: Check Dockerfile
+    id: hadolint
+    args:
+    - --config
+    - .github/config/hadolint-cfg.yaml
+- repo: https://github.com/adrienverge/yamllint
+  rev: v1.37.1
+  hooks:
+  - name: Check Yaml to verify syntax and more
+    id: yamllint
+    args:
+    - --no-warnings
+    - -c=.github/config/yamllint-cfg.yaml
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+  - name: Check TOML to verify syntax
+    id: check-toml
+  - name: Check JSON to verify syntax
+    id: check-json
+    types:
+    - json
+  - name: Check JSON pretty-format
+    id: pretty-format-json
+    args:
+    - --no-sort-keys
+  - name: Check added large files
+    id: check-added-large-files
+    args:
+    - --maxkb=2000
+  - name: Check file parse as valid python
+    id: check-ast
+  - name: Fix newline at end of file
+    id: end-of-file-fixer
+    exclude: ^tests/|^.gitignore$|^LICENSE$
+  - name: Fix to trim whitespace from ends of lines
+    id: trailing-whitespace
+    exclude: ^tests/|^.gitignore$
+- repo: https://github.com/tox-dev/pyproject-fmt
+  rev: v2.6.0
+  hooks:
+  - name: Python format pyproject.toml
+    id: pyproject-fmt
+- repo: https://github.com/pycqa/isort
+  rev: 6.0.1
+  hooks:
+  - name: Python isort
+    id: isort
+- repo: https://github.com/pycqa/flake8
+  rev: 7.3.0
+  hooks:
+  - name: Python flake8
+    id: flake8
+- repo: https://github.com/antonbabenko/pre-commit-terraform
+  rev: v1.99.5
+  hooks:
+  - name: Terraform format
+    id: terraform_fmt
+    args:
+    - --args=-no-color
+    - --args=-diff
+    - --args=-write=false
+    - --args=-recursive
+    - --args=-check
+  - name: Terraform linter
+    id: terraform_tflint
+    args:
+    - --args=--recursive
+    - --args=--format=sarif
