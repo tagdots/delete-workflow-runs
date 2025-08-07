@@ -1,0 +1,89 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+
+requires = [ "setuptools", "wheel" ]
+
+[project]
+name = "<project name>"
+version = "0.0.0"
+
+readme = "README.md"
+license-files = [ "LICENSE" ]
+authors = [
+  { name = "developers", email = "developers@tagdots.com" },
+]
+requires-python = ">=3.12.10"
+
+classifiers = [
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Build Tools",
+]
+
+dependencies = [
+  "setuptools==80.9.0",
+  "virtualenv==20.32.0",
+]
+
+optional-dependencies.test = [
+  "build",
+  "commitizen",
+  "coverage",
+  "flake8",
+  "isort",
+  "pre-commit",
+  "pyscan-rs",
+  "pytest",
+  "twine",
+]
+
+urls.Changelog = "<Repo Changelog URL>"
+urls.Documentation = "<Repo Documentation URL>"
+urls.Homepage = "<Org or User Homepage URL>"
+urls.Issues = "<Repo Issue URL>"
+urls.Repository = "<Repo URL>"
+
+scripts.<script name> = "<package name>.<filename>:main"
+
+[dependency-groups]
+test = [
+  "coverage[toml]",
+]
+
+[tool.setuptools.packages.find]
+where = [ "src" ]
+
+[tool.setuptools.dynamic]
+version = { attr = "src.<package name>.__init__" }
+
+[tool.pyproject-fmt]
+column_width = 125
+indent = 2
+keep_full_version = true
+
+[tool.coverage]
+source = [ "." ]
+
+[tool.coverage.run]
+branch = true
+command_line = "-m pytest -vs"
+include = [ "src/<package name>/*" ]
+omit = [ "tests/*" ]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = false
+include = [ "src/<package name>/*" ]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+major_version_zero = false
+tag_format = "$version"
+update_changelog_on_bump = true
+version_files = [
+  "src/<package name>/__init__.py:__version__",
+]
+version_provider = "pep621"
+version_scheme = "pep440"
