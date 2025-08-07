@@ -1,0 +1,51 @@
+---
+
+name: sidecar-pr-target
+
+on:  # yamllint disable-line rule:truthy
+  pull_request_target:
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  labeler:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        repository: ${{ github.repository }}
+
+    # https://github.com/marketplace/actions/labeler
+    - id: label-pr
+      uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 #v5.0.0
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - run: echo "${{ steps.label-pr.outputs.all-labels }}"
+
+  notify-slack:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Slack message on PR activities
+      uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+      with:
+        method: chat.postMessage
+        token: "${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}"
+        payload: |
+          channel: "${{ secrets.SECRET_SLACK_CHANNEL_PR }}"
+          text: ":fire: *Pull Request (re)opened or updated.*
+          ```
+          Repo  : ${{ github.repository }}\n
+          Branch: ${{ github.event.pull_request.head.ref }}\n
+          PR URL: ${{ github.event.pull_request.html_url }}
+          ```"
