@@ -18,7 +18,6 @@ from delete_workflow_runs.run import (
     check_user_inputs,
     get_api_estimate,
     get_auth,
-    get_core_api_rate_limit,
     get_owner_repo,
     main,
 )
@@ -93,18 +92,6 @@ class TestCheckUserInputs:
     def test_valid_max_days(self):
         repo = Mock()
         assert check_user_inputs(repo, "https://github.com/owner/repo", None, 5)
-
-
-class TestGetCoreApiRateLimit:
-    def test_get_rate_limit_success(self):
-        mock_gh = Mock()
-        mock_core = Mock()
-        mock_core.limit = 5000
-        mock_core.remaining = 4000
-        mock_gh.get_rate_limit.return_value = Mock(core=mock_core)
-        core_limit = get_core_api_rate_limit(mock_gh)
-        assert core_limit.limit == 5000
-        assert core_limit.remaining == 4000
 
 
 class TestGetApiEstimate:
