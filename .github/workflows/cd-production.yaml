@@ -1,0 +1,119 @@
+---
+
+name: CD-production
+
+on:  # yamllint disable-line rule:truthy
+
+  release:
+
+    types:
+      - published
+
+env:
+  PACKAGE_NAME: delete-workflow-runs
+  PYTHON_VERSION: '3.12.x'
+
+permissions:
+  contents: read
+
+jobs:
+
+  publish-PyPI:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout source code
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+    - name: Setup Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - shell: bash
+      run: |
+        # install dependencies and build
+        make test-install
+        make build
+
+    # https://github.com/marketplace/actions/pypi-publish
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc # v1.12.4
+      with:
+        attestations: false
+        packages-dir: dist/
+        password: ${{ secrets.SECRET_PYPI }}
+        print-hash: true
+        repository-url: https://upload.pypi.org/legacy/
+        verbose: true
+        verify-metadata: true
+
+  validate-PyPI:
+
+    needs: [publish-PyPI]
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Validate after short wait to ensure publish is complete
+      shell: bash
+      run: sleep 15
+
+    - name: Checkout source code
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+    - name: Setup Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - shell: bash
+      env:
+        INDEX_URL: "https://pypi.org/simple/"
+      run: |
+        # install package from PyPI and run app to show version
+        python -m pip install ${{ env.PACKAGE_NAME }}==${{ github.ref_name }}
+        ${{ env.PACKAGE_NAME }} --version
+
+  notify-slack:
+    if: always()
+
+    needs: [publish-PyPI, validate-PyPI]
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      WORKFLOW_RESULT: ${{ steps.get-previous-jobs-results.outputs.WORKFLOW_RESULT }}
+
+    steps:
+
+    - name: Get Overall Jobs Results
+      id: get-overall-jobs-results
+      shell: bash
+      run: |
+        # get overall result from all of the previous jobs
+        if "${{ needs.publish-PyPI.result == 'success' && needs.validate-PyPI.result == 'success' }}"; then
+          echo "WORKFLOW_RESULT=:white_check_mark:" >> "$GITHUB_OUTPUT"
+        else
+          echo "WORKFLOW_RESULT=:no_entry:" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Post message to Slack
+      uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+      with:
+        method: chat.postMessage
+        token: "${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}"
+        payload: |
+          channel: "${{ secrets.SECRET_SLACK_CHANNEL_CICD }}"
+          text: "
+              *Repository: ${{ github.repository }}*\n
+              *Workflow : ${{ github.workflow }} ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}*\n
+              *Tag Name : ${{ github.ref_name }}*
+              ```
+              URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n
+              Job: publish-PyPI  - ${{ needs.publish-PyPI.result }}\n
+              Job: validate-PyPI - ${{ needs.validate-PyPI.result }}
+              ```"

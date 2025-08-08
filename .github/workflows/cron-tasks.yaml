@@ -28,22 +28,24 @@ jobs:
     - id: badge-demo
       uses: tagdots/setup-badge-action@d450907c2ddc3c94b5eaed20f521eb4846475937 # 1.0.4
 
-  stale-workflows: # https://github.com/Mattraks/delete-workflow-runs
+  stale-workflow-runs: # https://github.com/tagdots/delete-workflow-runs-action
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
       actions: write
+      contents: read
 
     steps:
-    - name: Run stale-workflows
-      id: stale-workflows
-      uses: Mattraks/delete-workflow-runs@39f0bbed25d76b34de5594dceab824811479e5de # v2.0.6
+    - name: Delete Workflow Runs
+      id: delete-workflow-runs
+      uses: tagdots/delete-workflow-runs-action@main
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        repository: ${{ github.repository }}
-        retain_days: 5
-        keep_minimum_runs: 8
+        dry-run: false
+        repo-url: ${{ github.repository }}
+        max-days: 10
+        # min-runs:
 
   stale-issues-prs: # https://github.com/actions/stale
     runs-on: ubuntu-latest
