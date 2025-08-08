@@ -31,7 +31,7 @@ dependencies = [
   "pygithub==2.6.1",
   "rich==14.1.0",
   "setuptools==80.9.0",
-  "virtualenv==20.32.0",
+  "virtualenv==20.33.1",
 ]
 
 optional-dependencies.test = [
