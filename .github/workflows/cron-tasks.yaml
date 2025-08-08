@@ -83,6 +83,7 @@ jobs:
         badge-url: https://github.com/marketplace/actions/delete-workflow-runs-action
         label: Marketplace
         message: delete-workflow-runs-action
+        message-color: FF6360
 
   stale-workflow-runs: # https://github.com/tagdots/delete-workflow-runs-action
     runs-on: ubuntu-latest
