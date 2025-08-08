@@ -103,7 +103,7 @@ def get_core_api_rate_limit(gh):
     Return: core api limit
     """
     rate_limit = gh.get_rate_limit()
-    core_limit = rate_limit.core
+    core_limit = rate_limit.rate
     return core_limit
 
 
@@ -523,7 +523,7 @@ def main(dry_run, repo_url, min_runs, max_days):
             core_limit = get_core_api_rate_limit(gh)
             print('\n💥 Core API Rate Limit Changes')
             print(f'API rate limit used     : {int(core_limit.used) - int(core_limit_start)}')
-            print(f'API rate limit remaining: {int(core_limit.remaining)}')
+            print(f'API rate limit remaining: {core_limit.remaining}')
             print(f'API rate limit Reset At : {core_limit.reset} (UTC)\n')
 
             if dry_run:
