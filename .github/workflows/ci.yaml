@@ -20,6 +20,7 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
   pull-requests: read
 
@@ -31,6 +32,7 @@ jobs:
   build-test:
 
     permissions:
+      actions: read
       contents: write
       pull-requests: write
 
