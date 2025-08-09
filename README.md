@@ -68,7 +68,7 @@ Options:
 ### 🔍 Example 2 - Perform a dry-run delete to keep 10 workflow runs for each workflow
 **Summary**
 - **API rate limit:** total, remaining, consumption after this dry-run, & consumption estimate in no dry-run.
-- **Workflow runs:** 
+- **Workflow runs:**
   - workflow runs grouped by workflow name
   - divided between orphan and active workflows.
 - **Mock Delete:** workflow runs to be deleted (grouped by workflow name).
@@ -145,7 +145,7 @@ Enough API limit to run this delete now? ✅ yes
 ### 🔍 Example 3 - Delete workflow runs and keep up to the last 10 days for each workflow
 **Summary**
 - **API rate limit:** total, remaining, consumption after delete.
-- **Workflow runs:** 
+- **Workflow runs:**
   - workflow runs grouped by workflow name
   - divided between orphan and active workflows.
 - **Delete:** display deleted workflow runs (grouped by workflow name).
