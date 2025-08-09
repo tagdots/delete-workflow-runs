@@ -1,5 +1,7 @@
 # delete-workflow-runs
 
+
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11003/badge)](https://www.bestpractices.dev/projects/11003)
 [![CI](https://github.com/tagdots/delete-workflow-runs/actions/workflows/ci.yaml/badge.svg)](https://github.com/tagdots/delete-workflow-runs/actions/workflows/ci.yaml)
 [![marketplace](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/tagdots/delete-workflow-runs/refs/heads/badges/badges/marketplace.json)](https://github.com/marketplace/actions/delete-workflow-runs-action)
 [![coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/tagdots/delete-workflow-runs/refs/heads/badges/badges/coverage.json)](https://github.com/tagdots/delete-workflow-runs/actions/workflows/cron-tasks.yaml)
@@ -7,17 +9,19 @@
 <br>
 
 ## 😎 Why use delete-workflow-runs?
-**delete-workflow-runs** was created because some of the _most popular delete workflow runs_ actions on the marketplace:
-- are not regularly maintained.
-- do not identify orphan workflow runs to delete.
-- do not provide supportive information before a delete operation.
+**delete-workflow-runs** was created because some of the _most popular "delete workflow runs"_ actions on the marketplace:
+- are not regularly updated (_supply chain risk_).
+- do not show evidence of tests (_supply chain risk_).
+- do not identify orphan workflow runs to delete (_eat up costs for no reason_).
+- do not provide supportive information before a delete operation (_business risk you can't ignore_).
 
 <br>
 
 ## ⭐ Why switch to delete-workflow-runs?
+- we share evidence of "coverage run" tests in action (click _Code Coverage badge_).
 - we reduce your supply chain risks with `openssf best practices` in our SDLC and operations.
+- we identify orphan workflow runs that should be deleted when the parent workflow is deleted.
 - we produce API rate limit consumption estimate in dry-run, so you can plan your delete task properly.
-- we identify orphan workflows to delete their action runs.
 
 <br>
 
@@ -63,8 +67,10 @@ Options:
 
 ### 🔍 Example 2 - Perform a dry-run delete to keep 10 workflow runs for each workflow
 **Summary**
-- **API rate limit:** total, remaining, consumption after this dry-run, & consumption estimate without dry-run.
-- **Workflow runs:** workflow runs grouped by workflow name & divided between orphan and active workflows.
+- **API rate limit:** total, remaining, consumption after this dry-run, & consumption estimate in no dry-run.
+- **Workflow runs:**
+  - workflow runs grouped by workflow name
+  - divided between orphan and active workflows.
 - **Mock Delete:** workflow runs to be deleted (grouped by workflow name).
 
 ```
@@ -72,7 +78,7 @@ Options:
 
 🚀 Starting to Delete GitHub Action workflows (dry-run: True, min-runs: 10, max-days: None)
 
-💥 Core API Rate Limit Info
+💥 Core API Rate Limit (start)
 API rate limit          : 5000
 API rate limit remaining: 4993
 
@@ -122,7 +128,7 @@ dtype: int64
 🗑️ Deleting 10 workflow runs from sidecar-pr-target
 (MOCK TO DELETE): [15514064562, 15658883423, 15950739190, 16244732841, 16395541582, 16434566916, 16434627267, 16434740066, 16546738013, 16547528240]
 
-💥 Core API Rate Limit Changes
+💥 Core API Rate Limit (end)
 API rate limit used     : 5
 API rate limit remaining: 4988
 API rate limit Reset At : 2025-08-07 21:31:26+00:00 (UTC)
@@ -139,15 +145,17 @@ Enough API limit to run this delete now? ✅ yes
 ### 🔍 Example 3 - Delete workflow runs and keep up to the last 10 days for each workflow
 **Summary**
 - **API rate limit:** total, remaining, consumption after delete.
-- **Workflow runs:** workflow runs grouped by workflow name & divided between orphan and active workflows.
-- **Delete:** display workflow runs deleted (grouped by workflow name).
+- **Workflow runs:**
+  - workflow runs grouped by workflow name
+  - divided between orphan and active workflows.
+- **Delete:** display deleted workflow runs (grouped by workflow name).
 
 ```
 (hello-world) ~/work/hello-world $ delete-workflow-runs --max-days 10 --dry-run false --repo-url https://github.com/tagdots/hello-world
 
 🚀 Starting to Delete GitHub Action workflows (dry-run: False, min-runs: None, max-days: 10)
 
-💥 Core API Rate Limit Info
+💥 Core API Rate Limit (start)
 API rate limit          : 5000
 API rate limit remaining: 4983
 
@@ -209,7 +217,7 @@ workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/165798781
 Processing data... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
 
-💥 Core API Rate Limit Changes
+💥 Core API Rate Limit (end)
 API rate limit used     : 24
 API rate limit remaining: 4959
 API rate limit Reset At : 2025-08-07 22:46:47+00:00 (UTC)

@@ -465,10 +465,10 @@ def main(dry_run, repo_url, min_runs, max_days):
     try:
         gh = get_auth()
 
-        """display initial core api rate limit info"""
+        """display initial core api rate limit info at the beginning"""
         core_limit = get_core_api_rate_limit(gh)
         core_limit_start = core_limit.used
-        print('\n💥 Core API Rate Limit Info')
+        print('\n💥 Core API Rate Limit (start)')
         print(f'API rate limit          : {core_limit.limit}')
         print(f'API rate limit remaining: {core_limit.remaining}\n\n')
 
@@ -521,7 +521,7 @@ def main(dry_run, repo_url, min_runs, max_days):
             display core api rate limit info and create a usage estimate
             """
             core_limit = get_core_api_rate_limit(gh)
-            print('\n💥 Core API Rate Limit Changes')
+            print('\n💥 Core API Rate Limit (end)')
             print(f'API rate limit used     : {int(core_limit.used) - int(core_limit_start)}')
             print(f'API rate limit remaining: {core_limit.remaining}')
             print(f'API rate limit Reset At : {core_limit.reset} (UTC)\n')
