@@ -23,7 +23,7 @@ repos:
     - --no-warnings
     - -c=.github/config/yamllint-cfg.yaml
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
   - name: Check TOML to verify syntax
     id: check-toml
@@ -63,7 +63,7 @@ repos:
   - name: Python flake8
     id: flake8
 - repo: https://github.com/antonbabenko/pre-commit-terraform
-  rev: v1.99.5
+  rev: v1.100.0
   hooks:
   - name: Terraform format
     id: terraform_fmt
