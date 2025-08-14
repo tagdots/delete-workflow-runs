@@ -5,6 +5,7 @@ Purpose: Delete GitHub Action Workflow Runs
 """
 
 import concurrent.futures
+import json
 import os
 import sys
 import threading
@@ -445,6 +446,38 @@ def get_api_estimate(orphan_runs_count, delete_runs_count):
     return estimate
 
 
+def write_data_dict(dry_run, repo_url, min_runs, max_days, core_remaining, core_reset,
+                    core_usage_estimate, delete_active_workflow_runs_count, delete_orphan_workflow_runs_count):
+    """
+    Write data_dict to a file
+
+    Parameter(s):
+    dry_run                          : dry run
+    repo_url                         : repository url
+    max_days                         : maximum number of days to keep the run in a workflow
+    min_runs                         : minimum number of runs to keep in a workflow
+    core_remaining                   : core api rate limit remaining
+    core_reset                       : core api rate limit reset at
+    core_usage_estimate              : core api rate limit consumption for delete operation
+    delete_active_workflow_runs_count: number of active workflow runs to delete
+    delete_orphan_workflow_runs_count: number of orphan workflow runs to delete
+    """
+    data_dict = {}
+    data_dict.update({
+        "dry-run": dry_run,
+        "repo-url": repo_url,
+        "min-runs": min_runs,
+        "max-days": max_days,
+        "core-limit-remaining": core_remaining,
+        "core-limit-reset": str(core_reset),
+        "core-limit-usage-estimate": core_usage_estimate,
+        "delete-active-workflow-runs-count": delete_active_workflow_runs_count,
+        "delete-orphan-workflow-runs-count": delete_orphan_workflow_runs_count,
+    })
+    with open("data_dict.log", "w") as f:
+        json.dump(data_dict, f, indent=2)
+
+
 @click.command()
 @click.option("--dry-run", required=False, type=bool, default=True, show_default=True)
 @click.option("--repo-url", required=True, type=str, help="e.g. https://github.com/{owner}/{repo}")
@@ -522,6 +555,12 @@ def main(dry_run, repo_url, min_runs, max_days):
                     console.print('\nEnough API limit to run this delete now? ❌ no')
                     console.print('[red](segment this delete into multiple runs)[/red]')
                 console.print('[blue]****************************************************************************[/blue]')
+
+        """
+        write data_dict to a file for data feed to integrate with other tools
+        """
+        write_data_dict(dry_run, repo_url, min_runs, max_days, core_remaining, core_reset, core_usage_estimate,
+                        delete_active_workflow_runs_count, delete_orphan_workflow_runs_count)
 
     except Exception as e:
         print(f'❌ Exception Error: {e}')
