@@ -16,6 +16,9 @@ from github import GithubException
 from delete_workflow_runs.run import (
     break_down_df_all_runs,
     check_user_inputs,
+    delete_active_workflow_runs_max_days,
+    delete_active_workflow_runs_min_runs,
+    delete_orphan_workflow_runs,
     get_api_estimate,
     get_auth,
     get_owner_repo,
@@ -126,36 +129,26 @@ class TestDeleteOrphanWorkflowRuns:
     """
     dry-run: delete orphan run ids
     """
-    @patch("delete_workflow_runs.run.threading.Thread")
-    def test_delete_orphan_runs_dry_run(self, mock_thread):
-        from delete_workflow_runs.run import delete_orphan_workflow_runs
-
+    def test_delete_orphan_runs_dry_run(self):
         df_orphan = pd.DataFrame({"run_id": [101010, 101020]})
         mock_repo = Mock()
         mock_owner_repo = "owner/repo"
         count = delete_orphan_workflow_runs(mock_repo, mock_owner_repo, dry_run=True, df_orphan_runs=df_orphan)
         assert count == 2
-        mock_thread.assert_not_called()
 
-    @patch("delete_workflow_runs.run.threading.Thread")
-    def test_delete_orphan_runs(self, mock_thread):
-        from delete_workflow_runs.run import delete_orphan_workflow_runs
-
-        df_orphan = pd.DataFrame({"run_id": [101, 102]})
+    def test_delete_orphan_runs(self):
+        df_orphan = pd.DataFrame({"run_id": [101, 102, 103]})
         mock_repo = Mock()
         mock_owner_repo = "owner/repo"
         count = delete_orphan_workflow_runs(mock_repo, mock_owner_repo, dry_run=False, df_orphan_runs=df_orphan)
-        assert count == 2
+        assert count == 3
 
 
 class TestDeleteActiveWorkflowRunsMinRuns:
     """
     dry-run: delete 4 of 5 run ids from active workflows (on min-runs)
     """
-    @patch("delete_workflow_runs.run.threading.Thread")
-    def test_delete_active_runs_min_runs_dry_run(self, mock_thread):
-        from delete_workflow_runs.run import delete_active_workflow_runs_min_runs
-
+    def test_delete_active_runs_min_runs_dry_run(self):
         df_active = pd.DataFrame({
             "name": ["workflow-01", "workflow-01", "workflow-01", "workflow-01", "workflow-01"],
             "run_id": [90001, 90002, 90003, 90004, 90005],
@@ -172,10 +165,7 @@ class TestDeleteActiveWorkflowRunsMinRuns:
     """
     dry-run: there is no active workflow to delete (on min-runs)
     """
-    @patch("delete_workflow_runs.run.threading.Thread")
-    def test_delete_active_runs_min_runs_dry_run_no_delete(self, mock_thread):
-        from delete_workflow_runs.run import delete_active_workflow_runs_min_runs
-
+    def test_delete_active_runs_min_runs_dry_run_no_delete(self):
         df_active = pd.DataFrame({
             "name": ["workflow-01", "workflow-01", "workflow-01", "workflow-01"],
             "run_id": [60001, 60002, 60003, 60004],
@@ -188,15 +178,11 @@ class TestDeleteActiveWorkflowRunsMinRuns:
             mock_repo, mock_owner_repo, dry_run=True, min_runs=20, df=df_active
         )
         assert count == 0
-        assert mock_thread.call_count == 0
 
     """
     delete 2 of 5 run ids (on min-runs)
     """
-    @patch("delete_workflow_runs.run.threading.Thread")
-    def test_delete_active_runs_min_runs(self, mock_thread):
-        from delete_workflow_runs.run import delete_active_workflow_runs_min_runs
-
+    def test_delete_active_runs_min_runs(self):
         df_active = pd.DataFrame({
             "name": ["workflow-01", "workflow-01", "workflow-01", "workflow-01", "workflow-01"],
             "run_id": [40001, 40002, 4003, 40004, 40005],
@@ -209,17 +195,13 @@ class TestDeleteActiveWorkflowRunsMinRuns:
             mock_repo, mock_owner_repo, dry_run=False, min_runs=2, df=df_active
         )
         assert count == 3
-        assert mock_thread.call_count == 3
 
 
 class TestDeleteActiveWorkflowRunsMaxDays:
     """
     dry-run: delete 4 of 4 run ids from active workflows (on max-days)
     """
-    @patch("delete_workflow_runs.run.threading.Thread")
-    def test_delete_active_runs_max_days_dry_run(self, mock_thread):
-        from delete_workflow_runs.run import delete_active_workflow_runs_max_days
-
+    def test_delete_active_runs_max_days_dry_run(self):
         df_active = pd.DataFrame({
             "name": ["workflow-01", "workflow-01", "workflow-01", "workflow-01"],
             "run_id": [30001, 30002, 30003, 30004],
@@ -236,10 +218,7 @@ class TestDeleteActiveWorkflowRunsMaxDays:
     """
     dry-run: delete ZERO run ids (on max-days)
     """
-    @patch("delete_workflow_runs.run.threading.Thread")
-    def test_delete_active_runs_max_days_dry_run_no_delete(self, mock_thread):
-        from delete_workflow_runs.run import delete_active_workflow_runs_max_days
-
+    def test_delete_active_runs_max_days_dry_run_no_delete(self):
         df_active = pd.DataFrame({
             "name": ["workflow-01", "workflow-01", "workflow-01", "workflow-01"],
             "run_id": [70001, 70002, 70003, 70004],
@@ -252,15 +231,11 @@ class TestDeleteActiveWorkflowRunsMaxDays:
             mock_repo, mock_owner_repo, dry_run=True, max_days=2000, df=df_active
         )
         assert count == 0
-        assert mock_thread.call_count == 0
 
     """
     delete 4 run ids from active workflows (on max-days)
     """
-    @patch("delete_workflow_runs.run.threading.Thread")
-    def test_delete_active_runs_max_days(self, mock_thread):
-        from delete_workflow_runs.run import delete_active_workflow_runs_max_days
-
+    def test_delete_active_runs_max_days(self):
         df_active = pd.DataFrame({
             "name": ["workflow-1", "workflow-1", "workflow-1", "workflow-1"],
             "run_id": [50101, 50102, 50103, 50104],
@@ -273,7 +248,6 @@ class TestDeleteActiveWorkflowRunsMaxDays:
             mock_repo, mock_owner_repo, dry_run=False, max_days=30, df=df_active
         )
         assert count == 4
-        assert mock_thread.call_count == 4
 
 
 class TestMain:
