@@ -100,11 +100,18 @@ def get_core_api_rate_limit(gh):
     Parameter(s):
     gh: github class object from get_auth()
 
-    Return: core api limit
+    Return: core api limit remaining and reset at
     """
-    rate_limit = gh.get_rate_limit()
-    core_limit = rate_limit.rate
-    return core_limit
+    RateLimitOverview = gh.get_rate_limit()
+    core = RateLimitOverview.resources.core
+    core_reset = core.reset
+    core_remaining = core.remaining
+
+    print('\n💥 Core API Rate Limit Info')
+    print(f'API rate limit remaining: {core_remaining}')
+    print(f'API rate limit reset at : {core_reset} (UTC)\n')
+
+    return core_remaining, core_reset
 
 
 def get_all_workflow_runs(repo):
@@ -308,7 +315,7 @@ def delete_active_workflow_runs_min_runs(repo, owner_repo, dry_run, min_runs, df
                         thread.join()
 
     else:
-        console.print(f'[red]With min-runs ({min_runs}), there is no active workflow run to delete[/red]')
+        console.print(f'[red]With min-runs ({min_runs}) for each workflow, there is no active workflow run to delete.[/red]')
     print('\n')
 
     return delete_active_workflow_runs_count
@@ -336,7 +343,6 @@ def delete_active_workflow_runs_max_days(repo, owner_repo, dry_run, max_days, df
     """
     current_date = pd.Timestamp.now(tz='UTC')
     cutoff_date = current_date - timedelta(days=max_days)
-    cutoff_date = pd.to_datetime(cutoff_date, utc=True)
 
     """
     Group workflow runs by 'workflow name'
@@ -404,7 +410,7 @@ def delete_active_workflow_runs_max_days(repo, owner_repo, dry_run, max_days, df
                         thread.join()
 
     else:
-        console.print(f'[red]With max-days ({max_days}), there is no active workflow run to delete[/red]')
+        console.print(f'[red]With max-days ({max_days}) for each workflow, there is no active workflow run to delete.[/red]')
     print('\n')
 
     return delete_active_workflow_runs_count
@@ -418,14 +424,12 @@ def delete_workflow_runs(count, repo, workflow_run_id):  # pragma: no cover
     count          : number of workflow runs for each workflow namw
     repo           : github repository object
     workflow_run_id: github action workflow run id
-
-    NOTE: when the count >= 100, the time delay is to stay under the secondary rate limit
     """
     try:
         workflow_run = repo.get_workflow_run(workflow_run_id)
         workflow_run.delete()
         print(f'workflow run {workflow_run.html_url} deleted')
-        time.sleep(5) if count >= 100 else ''
+        time.sleep(0.5)
 
     except GithubException as e:
         print(f'❌ Failed to delete workflow run {workflow_run_id}: {e}')
@@ -452,34 +456,31 @@ def get_api_estimate(orphan_runs_count, delete_runs_count):
 
 
 @click.command()
-@click.option("--dry-run", required=False, type=bool, default=True, help="(optional) default: true")
+@click.option("--dry-run", required=False, type=bool, default=True, show_default=True)
 @click.option("--repo-url", required=True, type=str, help="e.g. https://github.com/{owner}/{repo}")
-@click.option("--min-runs", required=False, type=int, help="(optional) min. no. of runs to keep in a workflow")
-@click.option("--max-days", required=False, type=int, help="(optional) max. no. of days to keep the run in a workflow")
+@click.option("--min-runs", required=False, type=int, help="minimum number of runs to keep in a workflow")
+@click.option("--max-days", required=False, type=int, help="maximum number of days to keep the run in a workflow")
 @click.version_option(version=__version__)
 def main(dry_run, repo_url, min_runs, max_days):
     console = Console()
     console.print(f"\n🚀 Starting to Delete GitHub Action workflows (dry-run: [red]{dry_run}[/red], "
                   f"min-runs: [red]{min_runs}[/red], max-days: [red]{max_days}[/red])\n")
 
+    """initialize data"""
+    core_remaining = 0
+    core_reset = None
+    core_usage_estimate = None
+    delete_orphan_workflow_runs_count = 0
+    delete_active_workflow_runs_count = 0
+
     try:
         gh = get_auth()
-
-        """display initial core api rate limit info at the beginning"""
-        core_limit = get_core_api_rate_limit(gh)
-        core_limit_start = core_limit.used
-        print('\n💥 Core API Rate Limit (start)')
-        print(f'API rate limit          : {core_limit.limit}')
-        print(f'API rate limit remaining: {core_limit.remaining}\n\n')
 
         """setup github repo object"""
         owner_repo = get_owner_repo(repo_url)
         repo = gh.get_repo(owner_repo)
 
         if check_user_inputs(repo, repo_url, min_runs, max_days):
-            delete_orphan_workflow_runs_count = 0
-            delete_active_workflow_runs_count = 0
-
             """
             get all workflow runs
             """
@@ -487,11 +488,9 @@ def main(dry_run, repo_url, min_runs, max_days):
             if (len(df_all_runs) > 0):
                 df_orphan_runs, df_active_runs, list_orphan_ids = break_down_df_all_runs(repo, df_all_runs)
             else:
-                list_orphan_ids = []
                 df_active_runs = pd.DataFrame()
                 df_orphan_runs = pd.DataFrame()
-            print(f'Number of orphan workflow IDs : {len(list_orphan_ids)}')
-            print(f'Number of workflow runs       : {len(df_active_runs.index) + len(df_orphan_runs.index)}')
+            print(f'\nTotal Number of workflow runs : {len(df_active_runs.index) + len(df_orphan_runs.index)}')
             print(f'Number of orphan workflow runs: {len(df_orphan_runs.index)}')
             print(f'Number of active workflow runs: {len(df_active_runs.index)}\n')
 
@@ -508,7 +507,6 @@ def main(dry_run, repo_url, min_runs, max_days):
             """
             print('\n🔍 Active Workflow Runs')
             print(f'Number of oustanding active workflow run(s): {len(df_active_runs.index)}\n')
-            delete_active_workflow_runs_count = 0
             if len(df_active_runs.index) > 0:
                 if (isinstance(min_runs, int) and min_runs >= 0):
                     delete_active_workflow_runs_count =\
@@ -516,26 +514,23 @@ def main(dry_run, repo_url, min_runs, max_days):
                 elif (isinstance(max_days, int) and max_days >= 0):
                     delete_active_workflow_runs_count =\
                         delete_active_workflow_runs_max_days(repo, owner_repo, dry_run, max_days, df_active_runs)
+                delete_active_workflow_runs_count = delete_active_workflow_runs_count.item()\
+                    if not isinstance(delete_active_workflow_runs_count, int) else delete_active_workflow_runs_count
 
             """
             display core api rate limit info and create a usage estimate
             """
-            core_limit = get_core_api_rate_limit(gh)
-            print('\n💥 Core API Rate Limit (end)')
-            print(f'API rate limit used     : {int(core_limit.used) - int(core_limit_start)}')
-            print(f'API rate limit remaining: {core_limit.remaining}')
-            print(f'API rate limit Reset At : {core_limit.reset} (UTC)\n')
-
+            core_remaining, core_reset = get_core_api_rate_limit(gh)
             if dry_run:
-                estimate = get_api_estimate(delete_orphan_workflow_runs_count, delete_active_workflow_runs_count)
+                core_usage_estimate = get_api_estimate(delete_orphan_workflow_runs_count, delete_active_workflow_runs_count)
 
                 console.print('\n[blue]************************** API Usage Estimate ******************************[/blue]')
-                console.print(f"This delete can consume [red]{estimate}[/red] of your API limit.  ")
-                if (core_limit.remaining * 0.90) > estimate:
-                    print('\nEnough API limit to run this delete now? ✅ yes')
+                console.print(f'This delete can consume [red]{core_usage_estimate}[/red] of your API limit.')
+                if (core_remaining * 0.90) > core_usage_estimate:
+                    console.print('\nEnough API limit to run this delete now? ✅ yes')
                 else:
-                    print('\nEnough API limit to run this delete now? ❌ no')
-                    console.print("[red](segment this delete into multiple runs)[/red]")
+                    console.print('\nEnough API limit to run this delete now? ❌ no')
+                    console.print('[red](segment this delete into multiple runs)[/red]')
                 console.print('[blue]****************************************************************************[/blue]')
 
     except Exception as e:
