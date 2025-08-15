@@ -3,6 +3,6 @@
   "style": "flat",
   "label": "Marketplace",
   "labelColor": "2e2e2e",
-  "message": "delete-workflow-runs-action",
+  "message": "delete-workflow-runs",
   "color": "FF6360"
 }
