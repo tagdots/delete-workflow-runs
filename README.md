@@ -3,7 +3,7 @@
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11003/badge)](https://www.bestpractices.dev/projects/11003)
 [![CI](https://github.com/tagdots/delete-workflow-runs/actions/workflows/ci.yaml/badge.svg)](https://github.com/tagdots/delete-workflow-runs/actions/workflows/ci.yaml)
-[![marketplace](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/tagdots/delete-workflow-runs/refs/heads/badges/badges/marketplace.json)](https://github.com/marketplace/actions/delete-workflow-runs-action)
+[![marketplace](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/tagdots/delete-workflow-runs/refs/heads/badges/badges/marketplace.json)](https://github.com/marketplace/actions/delete-workflow-runs-in-github-action)
 [![coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/tagdots/delete-workflow-runs/refs/heads/badges/badges/coverage.json)](https://github.com/tagdots/delete-workflow-runs/actions/workflows/cron-tasks.yaml)
 
 <br>
@@ -26,7 +26,7 @@
 <br>
 
 ## 🏃 Running _delete-workflow-runs_ on GitHub action
-Please visit our GitHub action ([delete-workflow-runs-action](https://github.com/marketplace/actions/delete-workflow-runs-action)) on the GitHub Marketplace.
+Please visit our GitHub action ([delete-workflow-runs-in-github-action](https://github.com/marketplace/actions/delete-workflow-runs-in-github-action)) on the GitHub Marketplace.
 
 <br>
 
@@ -67,7 +67,7 @@ Options:
 
 ### 🔍 Example 2 - Perform a dry-run delete to keep 10 workflow runs for each workflow
 **Summary**
-- **API rate limit:** total, remaining, consumption after this dry-run, & consumption estimate in no dry-run.
+- **API rate limit:** remaining, the next limit reset, and consumption estimate in no dry-run.
 - **Workflow runs:**
   - workflow runs grouped by workflow name
   - divided between orphan and active workflows.
@@ -137,7 +137,7 @@ Enough API limit to run this delete now? ✅ yes
 
 ### 🔍 Example 3 - Delete workflow runs and keep up to the last 10 days for each workflow
 **Summary**
-- **API rate limit:** total, remaining, consumption after delete.
+- **API rate limit:** remaining and the next limit reset.
 - **Workflow runs:**
   - workflow runs grouped by workflow name
   - divided between orphan and active workflows.
@@ -176,32 +176,32 @@ dtype: int64
 
 
 🗑️ Deleting 1 workflow runs from ci
-workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/16579872850 deleted
+workflow run https://github.com/tagdots/hello-world/actions/runs/16579872850 deleted
 Processing data... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
 
 🗑️ Deleting 2 workflow runs from dependabot-updates
-workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/16579973735 deleted
-workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/16579973116 deleted
+workflow run https://github.com/tagdots/hello-world/actions/runs/16579973735 deleted
+workflow run https://github.com/tagdots/hello-world/actions/runs/16579973116 deleted
 Processing data... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
 
 🗑️ Deleting 2 workflow runs from reusable-build-test
-workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/16579881494 deleted
-workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/16579883068 deleted
+workflow run https://github.com/tagdots/hello-world/actions/runs/16579881494 deleted
+workflow run https://github.com/tagdots/hello-world/actions/runs/16579883068 deleted
 Processing data... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
 
 🗑️ Deleting 3 workflow runs from reusable-codeql
-workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/16579884454 deleted
-workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/16579886956 deleted
-workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/16579885594 deleted
+workflow run https://github.com/tagdots/hello-world/actions/runs/16579884454 deleted
+workflow run https://github.com/tagdots/hello-world/actions/runs/16579886956 deleted
+workflow run https://github.com/tagdots/hello-world/actions/runs/16579885594 deleted
 Processing data... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
 
 🗑️ Deleting 2 workflow runs from reusable-pre-commit
-workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/16579877146 deleted
-workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/16579878141 deleted
+workflow run https://github.com/tagdots/hello-world/actions/runs/16579877146 deleted
+workflow run https://github.com/tagdots/hello-world/actions/runs/16579878141 deleted
 Processing data... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
 
