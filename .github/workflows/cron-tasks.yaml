@@ -80,9 +80,9 @@ jobs:
       uses: tagdots/setup-badge-action@d450907c2ddc3c94b5eaed20f521eb4846475937 # 1.0.4
       with:
         badge-name: marketplace
-        badge-url: https://github.com/marketplace/actions/delete-workflow-runs-action
+        badge-url: https://github.com/marketplace/actions/delete-workflow-runs-in-github-action
         label: Marketplace
-        message: delete-workflow-runs-action
+        message: delete-workflow-runs
         message-color: FF6360
 
   stale-workflow-runs: # https://github.com/tagdots/delete-workflow-runs-action
