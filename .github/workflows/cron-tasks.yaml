@@ -92,17 +92,44 @@ jobs:
       actions: write
       contents: read
 
+    outputs:
+      DRY_RUN: ${{ steps.get_data.outputs.dry_run }}
+      REPO_URL: ${{ steps.get_data.outputs.repo_url }}
+      MAX_DAYS: ${{ steps.get_data.outputs.max_days }}
+      MIN_RUNS: ${{ steps.get_data.outputs.min_runs }}
+      LIMIT_EST: ${{ steps.get_data.outputs.limit_usage_est }}
+      LIMIT_REM: ${{ steps.get_data.outputs.limit_rem }}
+      LIMIT_RES: ${{ steps.get_data.outputs.limit_res }}
+      ACTIVE_CT: ${{ steps.get_data.outputs.active_ct }}
+      ORPHAN_CT: ${{ steps.get_data.outputs.orphan_ct }}
+
     steps:
-    - name: Delete Workflow Runs
-      id: delete-workflow-runs
-      uses: tagdots/delete-workflow-runs-action@main
+
+    - name: Run stale-workflow-runs
+      id: stale-workflow-runs
+      uses: tagdots/delete-workflow-runs-action@84559d20c720030c3745676fdeddcddd2133fd3d # 1.0.0
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        dry-run: false
         repo-url: ${{ github.repository }}
         max-days: 10
-        # min-runs:
+        dry-run: false
+
+    - name: Get data and set GITHUB_OUTPUT
+      id: get_data
+      shell: bash
+      run: |
+        # get data from the last step to set GITHUB_OUTPUT
+        cat data_dict.log | jq .
+        echo "dry_run=$(cat data_dict.log | jq '."dry-run"')" >> $GITHUB_OUTPUT
+        echo "repo_url=$(cat data_dict.log | jq '."repo-url"')" >> $GITHUB_OUTPUT
+        echo "max_days=$(cat data_dict.log | jq '."max-days"')" >> $GITHUB_OUTPUT
+        echo "min_runs=$(cat data_dict.log | jq '."min-runs"')" >> $GITHUB_OUTPUT
+        echo "limit_usage_est=$(cat data_dict.log | jq '."core-limit-usage-estimate"')" >> $GITHUB_OUTPUT
+        echo "limit_rem=$(cat data_dict.log | jq '."core-limit-remaining"')" >> $GITHUB_OUTPUT
+        echo "limit_res=$(cat data_dict.log | jq '."core-limit-reset"')" >> $GITHUB_OUTPUT
+        echo "active_ct=$(cat data_dict.log | jq '."delete-active-workflow-runs-count"')" >> $GITHUB_OUTPUT
+        echo "orphan_ct=$(cat data_dict.log | jq '."delete-orphan-workflow-runs-count"')" >> $GITHUB_OUTPUT
 
   stale-issues-prs: # https://github.com/actions/stale
     runs-on: ubuntu-latest
@@ -162,7 +189,7 @@ jobs:
         dry-run: false
         open-pr: true
 
-  notify-slack:
+  notify-slack: # https://github.com/slackapi/slack-github-action
     if: always()
     needs: [badge-coverage, badge-marketplace, stale-workflow-runs, stale-issues-prs, stale-branches, update-pre-commit]
 

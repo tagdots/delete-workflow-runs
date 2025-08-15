@@ -78,16 +78,10 @@ Options:
 
 🚀 Starting to Delete GitHub Action workflows (dry-run: True, min-runs: 10, max-days: None)
 
-💥 Core API Rate Limit (start)
-API rate limit          : 5000
-API rate limit remaining: 4993
-
-
 💪 Gathering All Workflow Runs...
 Processing data... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
-Number of orphan workflow IDs : 5
-Number of workflow runs       : 129
+Total Number of workflow runs : 129
 Number of orphan workflow runs: 30
 Number of active workflow runs: 99
 
@@ -128,8 +122,7 @@ dtype: int64
 🗑️ Deleting 10 workflow runs from sidecar-pr-target
 (MOCK TO DELETE): [15514064562, 15658883423, 15950739190, 16244732841, 16395541582, 16434566916, 16434627267, 16434740066, 16546738013, 16547528240]
 
-💥 Core API Rate Limit (end)
-API rate limit used     : 5
+💥 Core API Rate Limit Info
 API rate limit remaining: 4988
 API rate limit Reset At : 2025-08-07 21:31:26+00:00 (UTC)
 
@@ -155,16 +148,11 @@ Enough API limit to run this delete now? ✅ yes
 
 🚀 Starting to Delete GitHub Action workflows (dry-run: False, min-runs: None, max-days: 10)
 
-💥 Core API Rate Limit (start)
-API rate limit          : 5000
-API rate limit remaining: 4983
-
 
 💪 Gathering All Workflow Runs...
 Processing data... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
-Number of orphan workflow IDs : 0
-Number of workflow runs       : 32
+Total Number of workflow runs : 32
 Number of orphan workflow runs: 0
 Number of active workflow runs: 32
 
@@ -217,8 +205,7 @@ workflow run https://github.com/tagdots-dev/workflow-test/actions/runs/165798781
 Processing data... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
 
-💥 Core API Rate Limit (end)
-API rate limit used     : 24
+💥 Core API Rate Limit Info
 API rate limit remaining: 4959
 API rate limit Reset At : 2025-08-07 22:46:47+00:00 (UTC)
 ```
