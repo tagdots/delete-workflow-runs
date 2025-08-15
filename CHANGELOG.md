@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 1.1.6 (2025-08-15)
+
+### Fix
+
+- fix marketplace url
+- add tagged version to README and cron-tasks
+
 ## 1.1.3 (2025-08-14)
 
 ### Feat
