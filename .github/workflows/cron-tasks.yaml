@@ -63,7 +63,7 @@ jobs:
         compression-level: 6
 
     - id: coverage-badge
-      uses: tagdots/setup-badge-action@d450907c2ddc3c94b5eaed20f521eb4846475937 # 1.0.4
+      uses: tagdots/setup-badge-action@cfe062e2921260b385fbe23dcfe43b2b9eb3d3c5 # 1.0.12
       with:
         badge-name: coverage
         badge-url: https://github.com/tagdots-dev/workflow-test/actions/workflows/cron-tasks.yaml
@@ -77,7 +77,7 @@ jobs:
 
     steps:
     - id: badge-marketplace
-      uses: tagdots/setup-badge-action@d450907c2ddc3c94b5eaed20f521eb4846475937 # 1.0.4
+      uses: tagdots/setup-badge-action@cfe062e2921260b385fbe23dcfe43b2b9eb3d3c5 # 1.0.12
       with:
         badge-name: marketplace
         badge-url: https://github.com/marketplace/actions/delete-workflow-runs-in-github-action
@@ -107,7 +107,7 @@ jobs:
 
     - name: Run stale-workflow-runs
       id: stale-workflow-runs
-      uses: tagdots/delete-workflow-runs-action@563f02090cdf93da6798bcf304238e8ac383c49e # 1.0.2
+      uses: tagdots/delete-workflow-runs-action@58a1d5cc098bd375f82e70a5c8b45261024f100c # 1.0.4
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -183,7 +183,7 @@ jobs:
       id: update-pre-commit
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      uses: tagdots/update-pre-commit-action@c1b9f2cb98f920a06a99172d09af349bf783f3d9 # 1.0.20
+      uses: tagdots/update-pre-commit-action@7b2124d4ac1abdaf462b2ee85312e2b564aa2709 # 1.0.27
       with:
         file: .pre-commit-config.yaml
         dry-run: false
