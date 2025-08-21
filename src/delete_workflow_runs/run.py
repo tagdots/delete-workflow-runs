@@ -487,8 +487,8 @@ def write_data_dict(dry_run, repo_url, min_runs, max_days, core_remaining, core_
 @click.version_option(version=__version__)
 def main(dry_run, repo_url, min_runs, max_days):
     console = Console()
-    console.print(f"\n🚀 Starting to Delete GitHub Action workflows (dry-run: [red]{dry_run}[/red], "
-                  f"min-runs: [red]{min_runs}[/red], max-days: [red]{max_days}[/red])\n")
+    console.print(f"\n🚀 Starting to Delete GitHub Action workflows (dry-run: [red]{dry_run}[/red], \
+min-runs: [red]{min_runs}[/red], max-days: [red]{max_days}[/red])\n")
 
     """initialize data"""
     core_remaining = 0

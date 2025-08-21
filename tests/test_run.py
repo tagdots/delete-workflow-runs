@@ -318,7 +318,7 @@ class TestMain:
         result = runner.invoke(
             main,
             [
-                "--repo-url", "https://github.com/tagdots-dev/workflow-test",
+                "--repo-url", "https://github.com/tagdots/delete-workflow-runs",
                 "--max-days", "NA",
                 "--dry-run", "false"
             ]
@@ -338,7 +338,7 @@ class TestMain:
         result = runner.invoke(
             main,
             [
-                "--repo-url", "https://github.com/tagdots-dev/workflow-test",
+                "--repo-url", "https://github.com/tagdots/delete-workflow-runs",
                 "--min-runs", 100,
                 "--dry-run", "true"
             ]
@@ -359,7 +359,7 @@ class TestMain:
         result = runner.invoke(
             main,
             [
-                "--repo-url", "https://github.com/tagdots-dev/workflow-test",
+                "--repo-url", "https://github.com/tagdots/delete-workflow-runs",
                 "--max-days", 5,
                 "--dry-run", "true"
             ]
