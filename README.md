@@ -18,7 +18,7 @@
 <br>
 
 ## ⭐ Why switch to delete-workflow-runs?
-- we share evidence of "coverage run" tests in action (click _Code Coverage badge_).
+- we share evidence of "coverage run" test results in action (click _**Code Coverage**_ badge).
 - we reduce your supply chain risks with `openssf best practices` in our SDLC and operations.
 - we identify orphan workflow runs that should be deleted when the parent workflow is deleted.
 - we produce API rate limit consumption estimate in dry-run, so you can plan your delete task properly.
