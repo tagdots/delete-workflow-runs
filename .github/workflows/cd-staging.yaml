@@ -134,8 +134,8 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      WORKFLOW_RESULT: ${{ steps.get-previous-jobs-results.outputs.WORKFLOW_RESULT }}
-      TAG_NAME: ${{ steps.get-previous-jobs-results.outputs.TAG_NAME }}
+      WORKFLOW_RESULT: ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}
+      TAG_NAME: ${{ steps.get-overall-jobs-results.outputs.TAG_NAME }}
 
     steps:
 

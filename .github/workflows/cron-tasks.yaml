@@ -148,28 +148,26 @@ jobs:
         stale-issue-message: 'This issue is stale because it has been open 5 days with no activity. Remove stale label or comment or this will be closed in 3 days after stale'
         days-before-stale: 5
         days-before-close: 3
-        operations-per-run: 40
+        delete-branch: true
 
-  stale-branches: # https://github.com/crs-k/stale-branches
+  stale-branches: # https://github.com/tagdots/delete-branches-action
     runs-on: ubuntu-latest
 
     permissions:
-      issues: write
       contents: write
       pull-requests: read
 
     steps:
     - name: Run stale-branches
       id: stale-branches
-      uses: crs-k/stale-branches@de68d9358068be991f64ad9058487e2484925d9a # v8.2.1
+      uses: tagdots/delete-branches-action@ff424d3a4af5b29492bd8b778887583259b3e573 # 1.0.0
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        # days-before-stale cannot be greater than or equal to days-before-delete
-        branches-filter-regex: '^((?!main|badge))'
-        days-before-stale: 4
-        days-before-delete: 6
-        include-protected-branches: true
-        pr-check: true
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        repo-url: ${{ github.repository }}
+        max-idle-days: 10
+        exclude-branches: 'badges'
+        dry-run: false
 
   update-pre-commit: # https://github.com/tagdots/update-pre-commit-action
     runs-on: ubuntu-latest
@@ -196,7 +194,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      WORKFLOW_RESULT: ${{ steps.get-previous-jobs-results.outputs.WORKFLOW_RESULT }}
+      WORKFLOW_RESULT: ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}
 
     steps:
     - name: Get Overall Jobs Results
