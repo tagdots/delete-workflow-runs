@@ -424,6 +424,7 @@ def delete_workflow_runs(count, repo, workflow_run_id):  # pragma: no cover
 
     except GithubException as e:
         print(f'❌ Failed to delete workflow run {workflow_run_id}: {e}')
+        return None
 
 
 def get_api_estimate(orphan_runs_count, delete_runs_count):
