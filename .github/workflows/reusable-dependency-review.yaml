@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  review:
+  review: # https://github.com/actions/dependency-review-action
     runs-on: ubuntu-latest
     steps:
 
@@ -22,3 +22,4 @@ jobs:
         license-check: false
         vulnerability-check: true
         show-openssf-scorecard: false
+        fail-on-severity: low
