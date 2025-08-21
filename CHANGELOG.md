@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 1.1.14 (2025-08-20)
+
+### Feat
+
+- replace delete-branches-action to remove old branches and misc typo fixes
+
+### Fix
+
+- fix version not changing
+- update README, test-run repo names, and run start header
+- add fail-on-severity to dependency-review to detect vulnerabilities packages
+- resolve mixed-returns
+
 ## 1.1.6 (2025-08-15)
 
 ### Fix
