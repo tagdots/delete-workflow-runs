@@ -1,5 +1,6 @@
 # delete-workflow-runs
 
+**✅ Remove GitHub workflow runs**
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11003/badge)](https://www.bestpractices.dev/projects/11003)
 [![CI](https://github.com/tagdots/delete-workflow-runs/actions/workflows/ci.yaml/badge.svg)](https://github.com/tagdots/delete-workflow-runs/actions/workflows/ci.yaml)
@@ -8,8 +9,8 @@
 
 <br>
 
-## 😎 Why use delete-workflow-runs?
-**delete-workflow-runs** was created because some of the _most popular "delete workflow runs"_ actions on the marketplace:
+## 😎 Why we create delete-workflow-runs?
+**delete-workflow-runs** was created because some of the _most popular "delete workflow runs"_ actions on the GitHub marketplace:
 - are not regularly updated (_supply chain risk_).
 - do not show evidence of tests (_supply chain risk_).
 - do not identify orphan workflow runs to delete (_eat up costs for no reason_).
@@ -18,10 +19,10 @@
 <br>
 
 ## ⭐ Why switch to delete-workflow-runs?
-- we share evidence of "coverage run" test results in action (click _**Code Coverage**_ badge).
-- we reduce your supply chain risks with `openssf best practices` in our SDLC and operations.
+- we reduce your supply chain risks with [openssf best practices](https://best.openssf.org) in our SDLC and operations.
 - we identify orphan workflow runs that should be deleted when the parent workflow is deleted.
-- we produce API rate limit consumption estimate in dry-run, so you can plan your delete task properly.
+- we produce _**API rate limit consumption estimate in dry-run**_, so you can plan your delete task properly.
+- we share evidence of code coverage results in action (click _Code Coverage » cron-tasks » badge-coverage_).
 
 <br>
 
@@ -40,7 +41,7 @@ Please visit our GitHub action ([delete-workflow-runs-in-github-action](https://
 
 <br>
 
-### Install _delete-workflow-runs_
+### Setup _delete-workflow-runs_
 ```
 ~/work/hello-world $ workon hello-world
 (hello-world) ~/work/hello-world $ export GH_TOKEN=github_pat_xxxxxxxxxxxxx
@@ -65,12 +66,12 @@ Options:
 
 <br>
 
-### 🔍 Example 2 - Perform a dry-run delete to keep 10 workflow runs for each workflow
+### 🔍 Example 2 - Perform a MOCK delete to keep 10 workflow runs for each workflow
 **Summary**
-- **API rate limit:** remaining, the next limit reset, and consumption estimate in no dry-run.
+- **API rate limit:** remaining, the next time rate limit will reset, and consumption estimate in no dry-run.
 - **Workflow runs:**
-  - workflow runs grouped by workflow name
   - divided between orphan and active workflows.
+  - workflow runs grouped by workflow name
 - **Mock Delete:** workflow runs to be deleted (grouped by workflow name).
 
 ```
@@ -127,7 +128,7 @@ API rate limit remaining: 4988
 API rate limit Reset At : 2025-08-07 21:31:26+00:00 (UTC)
 
 ************************** API Usage Estimate ******************************
-This delete can consume 162 of your API limit.
+This delete can consume 162 units of your API limit.
 
 Enough API limit to run this delete now? ✅ yes
 ****************************************************************************
@@ -137,10 +138,10 @@ Enough API limit to run this delete now? ✅ yes
 
 ### 🔍 Example 3 - Delete workflow runs and keep up to the last 10 days for each workflow
 **Summary**
-- **API rate limit:** remaining and the next limit reset.
+- **API rate limit:** remaining and the next time rate limit will reset.
 - **Workflow runs:**
-  - workflow runs grouped by workflow name
   - divided between orphan and active workflows.
+  - workflow runs grouped by workflow name
 - **Delete:** display deleted workflow runs (grouped by workflow name).
 
 ```
@@ -231,6 +232,15 @@ API rate limit Reset At : 2025-08-07 22:46:47+00:00 (UTC)
 * No more than 90 seconds of CPU time per 60 seconds of real time is allowed.
 * Make too many requests that consume excessive compute resources in a short period of time.
 ```
+
+<br>
+
+## ✍️ Notes
+1. We don't present the starting and ending numbers of the API rate limit.  Based on our pioneer user feedback, other tasks are running and consuming the API rate limit in parallel, which renders the numbers with mixed results.
+
+1. We take a conservative approach and use only one worker thread, adding a 0.5-second delay after each delete to protect you from rate limit issues.  In the screenshot below, we used 16.5 minutes to delete 626 active workflow runs.  If not for the rate limit concern, we could have got it down to less than 5 minutes.
+
+![delete-01](https://raw.githubusercontent.com/tagdots/delete-workflow-runs/refs/heads/main/assets/delete-workflow-runs-01.png)
 
 <br>
 
