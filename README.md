@@ -1,10 +1,8 @@
-# delete-workflow-runs
-
-**✅ Remove GitHub workflow runs**
+# Delete Workflow Runs
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11003/badge)](https://www.bestpractices.dev/projects/11003)
 [![CI](https://github.com/tagdots/delete-workflow-runs/actions/workflows/ci.yaml/badge.svg)](https://github.com/tagdots/delete-workflow-runs/actions/workflows/ci.yaml)
-[![marketplace](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/tagdots/delete-workflow-runs/refs/heads/badges/badges/marketplace.json)](https://github.com/marketplace/actions/delete-workflow-runs-in-github-action)
+[![marketplace](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/tagdots/delete-workflow-runs/refs/heads/badges/badges/marketplace.json)](https://github.com/marketplace/actions/delete-github-workflow-runs)
 [![coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/tagdots/delete-workflow-runs/refs/heads/badges/badges/coverage.json)](https://github.com/tagdots/delete-workflow-runs/actions/workflows/cron-tasks.yaml)
 
 <br>
@@ -21,13 +19,94 @@
 ## ⭐ Why switch to delete-workflow-runs?
 - we reduce your supply chain risks with [openssf best practices](https://best.openssf.org) in our SDLC and operations.
 - we identify orphan workflow runs that should be deleted when the parent workflow is deleted.
-- we produce _**API rate limit consumption estimate in dry-run**_, so you can plan your delete task properly.
+- we produce _API rate limit consumption estimate in dry-run_, so you can plan your delete task properly.
 - we share evidence of code coverage results in action (click _Code Coverage » cron-tasks » badge-coverage_).
 
 <br>
 
 ## 🏃 Running _delete-workflow-runs_ on GitHub action
-Please visit our GitHub action ([delete-workflow-runs-in-github-action](https://github.com/marketplace/actions/delete-workflow-runs-in-github-action)) on the GitHub Marketplace.
+
+Use the workflow examples below to create your own workflow inside `.github/workflows/`.
+
+<br>
+
+### Example 1 - MOCK Delete Summary
+
+* run on a scheduled interval - every day at 5:30 pm UTC  (`- cron: '30 17 * * *'`)
+* use GitHub Token with permissions: `actions: read` and `contents: read`
+* keep only the last 10 workflow runs for each workflow (`min-runs: 10`)
+* perform a **MOCK delete** (`dry-run: true`)
+* provide an estimate of API rate limit consumption
+
+### Example 1 - MOCK Delete Workflow
+```
+name: delete-github-workflow-runs
+
+on:
+  schedule:
+    - cron: '30 17 * * *'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  delete-workflow-runs:
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+
+    - name: Run delete-workflow-runs
+      id: delete-workflow-runs
+      uses: tagdots/delete-workflow-runs@ff892995d02483811ca8046753f314f699a13d22 # 1.0.14
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        repo-url: ${{ github.repository }}
+        min-runs: 10
+        dry-run: true
+```
+
+<br>
+
+### Example 2 - Irreversible Delete Summary
+
+* runs on a scheduled interval - every day at 5:30 pm UTC  (`- cron: '30 17 * * *'`)
+* uses GitHub Token with permissions: `actions: write` and `contents: read`
+* keep the workflow runs in the last 10 days for each workflow (`max-days: 10`)
+* performs a **irreversible delete** (`dry-run: false`)
+
+### Example 2 - Irreversible Delete Workflow
+```
+name: delete-github-workflow-runs
+
+on:
+  schedule:
+    - cron: '30 17 * * *'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  delete-workflow-runs:
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write
+      contents: read
+
+    - id: delete-workflow-runs
+      uses: tagdots/delete-workflow-runs@ff892995d02483811ca8046753f314f699a13d22 # 1.0.14
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        repo-url: ${{ github.repository }}
+        max-days: 10
+        dry-run: false
+```
 
 <br>
 
@@ -136,13 +215,13 @@ Enough API limit to run this delete now? ✅ yes
 
 <br>
 
-### 🔍 Example 3 - Delete workflow runs and keep up to the last 10 days for each workflow
+### 🔍 Example 3 - Keep workflow runs for the last 10 days and delete the rest
 **Summary**
 - **API rate limit:** remaining and the next time rate limit will reset.
 - **Workflow runs:**
   - divided between orphan and active workflows.
   - workflow runs grouped by workflow name
-- **Delete:** display deleted workflow runs (grouped by workflow name).
+- **Delete:** deleted workflow runs (grouped by workflow name).
 
 ```
 (hello-world) ~/work/hello-world $ delete-workflow-runs --max-days 10 --dry-run false --repo-url https://github.com/tagdots/hello-world
