@@ -80,12 +80,12 @@ jobs:
       uses: tagdots/setup-badge-action@cfe062e2921260b385fbe23dcfe43b2b9eb3d3c5 # 1.0.12
       with:
         badge-name: marketplace
-        badge-url: https://github.com/marketplace/actions/delete-workflow-runs-in-github-action
+        badge-url: https://github.com/marketplace/actions/delete-github-workflow-runs
         label: Marketplace
-        message: delete-workflow-runs
+        message: delete-github-workflow-runs
         message-color: FF6360
 
-  stale-workflow-runs: # https://github.com/tagdots/delete-workflow-runs-action
+  stale-workflow-runs: # https://github.com/tagdots/delete-workflow-runs
     runs-on: ubuntu-latest
 
     permissions:
@@ -107,7 +107,7 @@ jobs:
 
     - name: Run stale-workflow-runs
       id: stale-workflow-runs
-      uses: tagdots/delete-workflow-runs-action@58a1d5cc098bd375f82e70a5c8b45261024f100c # 1.0.4
+      uses: tagdots/delete-workflow-runs@ff892995d02483811ca8046753f314f699a13d22 # 1.0.14
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -150,7 +150,7 @@ jobs:
         days-before-close: 3
         delete-branch: true
 
-  stale-branches: # https://github.com/tagdots/delete-branches-action
+  stale-branches: # https://github.com/tagdots/delete-branches
     runs-on: ubuntu-latest
 
     permissions:
@@ -160,7 +160,7 @@ jobs:
     steps:
     - name: Run stale-branches
       id: stale-branches
-      uses: tagdots/delete-branches-action@fad59ec4b73f3a47a2b8687ec8613e25a832debc # 1.0.2
+      uses: tagdots/delete-branches@ebb07763856e4839fcac4de83fd911531f490aae # 1.0.0
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
