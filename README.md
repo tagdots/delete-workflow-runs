@@ -60,7 +60,7 @@ jobs:
 
     - name: Run delete-workflow-runs
       id: delete-workflow-runs
-      uses: tagdots/delete-workflow-runs@6384f56e65ab6e4e2e7193b3cffd3aae93b4636a # 1.0.18
+      uses: tagdots/delete-workflow-runs@6384f56e65ab6e4e2e7193b3cffd3aae93b4636a # 1.1.18
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -99,7 +99,7 @@ jobs:
       contents: read
 
     - id: delete-workflow-runs
-      uses: tagdots/delete-workflow-runs@6384f56e65ab6e4e2e7193b3cffd3aae93b4636a # 1.0.18
+      uses: tagdots/delete-workflow-runs@6384f56e65ab6e4e2e7193b3cffd3aae93b4636a # 1.1.18
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
