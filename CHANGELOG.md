@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.1.21 (2025-08-24)
+
+### Fix
+
+- polish documentation in README, cron-tasks, run, and action
+- revise version with typo
+- update hash and version in cron-tasks and README
+
 ## 1.1.18 (2025-08-23)
 
 ### Feat
