@@ -1,6 +1,6 @@
 name: "Delete GitHub Workflow Runs"
 
-description: ':octocat: Delete GitHub Action workflow runs'
+description: 'Delete GitHub Action workflow runs'
 
 author: tagdots
 
