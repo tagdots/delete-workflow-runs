@@ -3,6 +3,6 @@
   "style": "flat",
   "label": "Marketplace",
   "labelColor": "2e2e2e",
-  "message": "delete-github-workflow-runs",
+  "message": "Delete GitHub Workflow Runs",
   "color": "FF6360"
 }
