@@ -82,7 +82,7 @@ jobs:
         badge-name: marketplace
         badge-url: https://github.com/marketplace/actions/delete-github-workflow-runs
         label: Marketplace
-        message: delete-github-workflow-runs
+        message: 'Delete GitHub Workflow Runs'
         message-color: FF6360
 
   stale-workflow-runs: # https://github.com/tagdots/delete-workflow-runs
@@ -105,8 +105,8 @@ jobs:
 
     steps:
 
-    - name: Run stale-workflow-runs
-      id: stale-workflow-runs
+    - name: Run delete-workflow-runs
+      id: delete-workflow-runs
       uses: tagdots/delete-workflow-runs@6384f56e65ab6e4e2e7193b3cffd3aae93b4636a # 1.1.18
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -158,9 +158,9 @@ jobs:
       pull-requests: read
 
     steps:
-    - name: Run stale-branches
-      id: stale-branches
-      uses: tagdots/delete-branches@ebb07763856e4839fcac4de83fd911531f490aae # 1.0.0
+    - name: Run delete-branches
+      id: delete-branches
+      uses: tagdots/delete-branches@774994b535b7853251f338762a0b5fe829eece09 # 1.1.1
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
