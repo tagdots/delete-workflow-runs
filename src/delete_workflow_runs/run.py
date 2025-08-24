@@ -162,8 +162,6 @@ def append_runs_to_list(all_runs, workflow_id, run_id, created_at, name, lock):
     name       : workflow run name from workflow path
     run_id     : run id from workflow
     workflow_id: workflow id from all_runs
-
-    Return: pandas dataframe that contains all workflow runs
     """
     with lock:
         all_runs.append({
@@ -216,7 +214,7 @@ def delete_orphan_workflow_runs(repo, owner_repo, dry_run, df_orphan_runs):
     dry_run       : dry run
     df_orphan_runs: pandas dataframe that contains orphan workflow runs
 
-    Return: total number of orphan workflow runs to be deleted
+    Return: total number of orphan workflow runs
     """
     console = Console()
     list_run_id = df_orphan_runs['run_id'].to_list()
@@ -437,7 +435,7 @@ def get_api_estimate(orphan_runs_count, delete_runs_count):
 
     NOTE:
     1. this script consumes 3 API limit at the minimum
-    2. every page (100 items) on paginationlist adds an API call
+    2. every page (100 items) on paginationlist consumes an API call
     3. "delete workflow run" requires 2 API calls to 1) retrieve the workflow run object 2) call the delete method
     """
     estimate = (
