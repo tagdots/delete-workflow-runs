@@ -7,7 +7,7 @@ repos:
     args:
     - --verbose
 - repo: https://github.com/hadolint/hadolint
-  rev: v2.13.1
+  rev: v2.14.0
   hooks:
   - name: Check Dockerfile
     id: hadolint
@@ -63,7 +63,7 @@ repos:
   - name: Python flake8
     id: flake8
 - repo: https://github.com/antonbabenko/pre-commit-terraform
-  rev: v1.100.0
+  rev: v1.100.1
   hooks:
   - name: Terraform format
     id: terraform_fmt
