@@ -7,7 +7,7 @@ repos:
     args:
     - --verbose
 - repo: https://github.com/hadolint/hadolint
-  rev: v2.13.1
+  rev: v2.14.0
   hooks:
   - name: Check Dockerfile
     id: hadolint
@@ -48,12 +48,12 @@ repos:
     id: trailing-whitespace
     exclude: ^tests/|^.gitignore$
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: v2.6.0
+  rev: v2.7.0
   hooks:
   - name: Python format pyproject.toml
     id: pyproject-fmt
 - repo: https://github.com/pycqa/isort
-  rev: 6.0.1
+  rev: 6.1.0
   hooks:
   - name: Python isort
     id: isort
@@ -63,7 +63,7 @@ repos:
   - name: Python flake8
     id: flake8
 - repo: https://github.com/antonbabenko/pre-commit-terraform
-  rev: v1.100.0
+  rev: v1.101.0
   hooks:
   - name: Terraform format
     id: terraform_fmt
