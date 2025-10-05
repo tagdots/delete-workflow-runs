@@ -23,10 +23,10 @@ classifiers = [
 ]
 
 dependencies = [
-  "click==8.2.1",
-  "click-option-group==0.5.7",
+  "click==8.3.0",
+  "click-option-group==0.5.8",
   "gitpython==3.1.45",
-  "pandas==2.3.2",
+  "pandas==2.3.3",
   "progress==1.6.1",
   "pygithub==2.8.1",
   "rich==14.1.0",
