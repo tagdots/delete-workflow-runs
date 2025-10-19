@@ -23,15 +23,15 @@ classifiers = [
 ]
 
 dependencies = [
-  "click==8.2.1",
-  "click-option-group==0.5.7",
+  "click==8.3.0",
+  "click-option-group==0.5.9",
   "gitpython==3.1.45",
-  "pandas==2.3.2",
+  "pandas==2.3.3",
   "progress==1.6.1",
   "pygithub==2.8.1",
-  "rich==14.1.0",
+  "rich==14.2.0",
   "setuptools==80.9.0",
-  "virtualenv==20.34.0",
+  "virtualenv==20.35.3",
 ]
 
 optional-dependencies.test = [
