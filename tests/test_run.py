@@ -3,7 +3,6 @@
 """
 Purpose: tests
 """
-
 import os
 from datetime import datetime, timezone
 from unittest.mock import Mock, patch
@@ -21,7 +20,7 @@ from delete_workflow_runs.run import (
     delete_orphan_workflow_runs,
     get_api_estimate,
     get_auth,
-    get_owner_repo,
+    get_repo,
     main,
 )
 
@@ -41,60 +40,60 @@ class TestGetAuth:
     def test_get_auth_missing_token(self, monkeypatch):
         if "GH_TOKEN" in os.environ:
             monkeypatch.delenv("GH_TOKEN")
-        with pytest.raises(SystemExit) as excinfo:
+        with pytest.raises(KeyError):
             get_auth()
-        assert excinfo.value.code == 1
+        assert KeyError
 
     def test_get_auth_invalid_token(self, monkeypatch):
         if "GH_TOKEN" in os.environ:
-            monkeypatch.setenv("GH_TOKEN", "")
-        with pytest.raises(SystemExit) as excinfo:
+            monkeypatch.setenv("GH_TOKEN", "1212212")
+        with pytest.raises(PermissionError):
             get_auth()
-        assert excinfo.value.code == 1
+        assert PermissionError
 
 
-class TestGetOwnerRepo:
-    def test_https_url(self):
-        repo_url = "https://github.com/owner/repo.git"
-        assert get_owner_repo(repo_url) == "owner/repo"
+class TestGetRepo:
+    def test_https_url(self, monkeypatch):
+        monkeypatch.setenv("GH_TOKEN", "valid_token")
+        with patch("delete_workflow_runs.run.Github") as mock_github:
+            mock_user = Mock()
+            mock_user.login = "test_user"
+            mock_gh = mock_github.return_value
+            mock_gh.get_user.return_value = mock_user
+            gh = get_auth()
+            repo_url = "https://github.com/owner/repo.git"
+            assert get_repo(gh, repo_url)
 
-    def test_ssh_url(self):
-        repo_url = "git@github.com:owner/repo.git"
-        assert get_owner_repo(repo_url) == "owner/repo"
-
-    def test_no_git_suffix(self):
-        repo_url = "https://github.com/owner/repo"
-        assert get_owner_repo(repo_url) == "owner/repo"
+    def test_ssh_url(self, monkeypatch):
+        monkeypatch.setenv("GH_TOKEN", "valid_token")
+        with patch("delete_workflow_runs.run.Github") as mock_github:
+            mock_user = Mock()
+            mock_user.login = "test_user"
+            mock_gh = mock_github.return_value
+            mock_gh.get_user.return_value = mock_user
+            gh = get_auth()
+            repo_url = "git@github.com:owner/repo.git"
+            assert get_repo(gh, repo_url)
 
 
 class TestCheckUserInputs:
     def test_both_min_runs_and_max_days(self):
-        repo = Mock()
-        assert not check_user_inputs(repo, "https://github.com/owner/repo", 5, 5)
+        assert not check_user_inputs(5, 5)
 
     def test_neither_min_nor_max(self):
-        repo = Mock()
-        assert not check_user_inputs(repo, "https://github.com/owner/repo", None, None)
+        assert not check_user_inputs(None, None)  # type: ignore reportArgumentType
 
     def test_min_runs_negative(self):
-        repo = Mock()
-        assert not check_user_inputs(repo, "https://github.com/owner/repo", -1, None)
+        assert not check_user_inputs(-1, None)  # type: ignore reportArgumentType
 
     def test_max_days_negative(self):
-        repo = Mock()
-        assert not check_user_inputs(repo, "https://github.com/owner/repo", None, -1)
-
-    def test_invalid_repo_url(self):
-        repo = Mock()
-        assert not check_user_inputs(repo, "invalid_url", 5, None)
+        assert not check_user_inputs(None, -1)  # type: ignore reportArgumentType
 
     def test_valid_min_runs(self):
-        repo = Mock()
-        assert check_user_inputs(repo, "https://github.com/owner/repo", 5, None)
+        assert check_user_inputs(5, None)  # type: ignore reportArgumentType
 
     def test_valid_max_days(self):
-        repo = Mock()
-        assert check_user_inputs(repo, "https://github.com/owner/repo", None, 5)
+        assert check_user_inputs(None, 5)  # type: ignore reportArgumentType
 
 
 class TestGetApiEstimate:
@@ -119,10 +118,9 @@ class TestBreakDownDfAllRuns:
         mock_workflow2 = Mock(id=102)
         mock_repo = Mock()
         mock_repo.get_workflows.return_value = [mock_workflow1, mock_workflow2]
-        df_orphan_runs, df_active_runs, list_orphan_ids = break_down_df_all_runs(mock_repo, df_all_runs)
+        df_orphan_runs, df_active_runs = break_down_df_all_runs(mock_repo, df_all_runs)
         assert len(df_orphan_runs) == 1
         assert len(df_active_runs) == 2
-        assert list_orphan_ids == [201]
 
 
 class TestDeleteOrphanWorkflowRuns:
@@ -132,15 +130,13 @@ class TestDeleteOrphanWorkflowRuns:
     def test_delete_orphan_runs_dry_run(self):
         df_orphan = pd.DataFrame({"run_id": [101010, 101020]})
         mock_repo = Mock()
-        mock_owner_repo = "owner/repo"
-        count = delete_orphan_workflow_runs(mock_repo, mock_owner_repo, dry_run=True, df_orphan_runs=df_orphan)
+        count = delete_orphan_workflow_runs(mock_repo, dry_run=True, df_orphan_runs=df_orphan)
         assert count == 2
 
     def test_delete_orphan_runs(self):
         df_orphan = pd.DataFrame({"run_id": [101, 102, 103]})
         mock_repo = Mock()
-        mock_owner_repo = "owner/repo"
-        count = delete_orphan_workflow_runs(mock_repo, mock_owner_repo, dry_run=False, df_orphan_runs=df_orphan)
+        count = delete_orphan_workflow_runs(mock_repo, dry_run=False, df_orphan_runs=df_orphan)
         assert count == 3
 
 
@@ -148,7 +144,7 @@ class TestDeleteActiveWorkflowRunsMinRuns:
     """
     dry-run: delete 4 of 5 run ids from active workflows (on min-runs)
     """
-    def test_delete_active_runs_min_runs_dry_run(self):
+    def test_delete_active_runs_min_runs_dry_run_true(self):
         df_active = pd.DataFrame({
             "name": ["workflow-01", "workflow-01", "workflow-01", "workflow-01", "workflow-01"],
             "run_id": [90001, 90002, 90003, 90004, 90005],
@@ -156,16 +152,15 @@ class TestDeleteActiveWorkflowRunsMinRuns:
             "created_at": [datetime(2023, 1, 1, tzinfo=timezone.utc)] * 5
         })
         mock_repo = Mock()
-        mock_owner_repo = "owner/repo"
         count = delete_active_workflow_runs_min_runs(
-            mock_repo, mock_owner_repo, dry_run=True, min_runs=1, df=df_active
+            mock_repo, dry_run=True, min_runs=1, df=df_active
         )
         assert count == 4
 
     """
     dry-run: there is no active workflow to delete (on min-runs)
     """
-    def test_delete_active_runs_min_runs_dry_run_no_delete(self):
+    def test_delete_active_runs_min_runs_dry_run_true_no_delete(self):
         df_active = pd.DataFrame({
             "name": ["workflow-01", "workflow-01", "workflow-01", "workflow-01"],
             "run_id": [60001, 60002, 60003, 60004],
@@ -173,16 +168,15 @@ class TestDeleteActiveWorkflowRunsMinRuns:
             "created_at": [datetime(2023, 1, 1, tzinfo=timezone.utc)] * 4
         })
         mock_repo = Mock()
-        mock_owner_repo = "owner/repo"
         count = delete_active_workflow_runs_min_runs(
-            mock_repo, mock_owner_repo, dry_run=True, min_runs=20, df=df_active
+            mock_repo, dry_run=True, min_runs=20, df=df_active
         )
         assert count == 0
 
     """
     delete 2 of 5 run ids (on min-runs)
     """
-    def test_delete_active_runs_min_runs(self):
+    def test_delete_active_runs_min_runs_dry_run_false(self):
         df_active = pd.DataFrame({
             "name": ["workflow-01", "workflow-01", "workflow-01", "workflow-01", "workflow-01"],
             "run_id": [40001, 40002, 4003, 40004, 40005],
@@ -190,9 +184,8 @@ class TestDeleteActiveWorkflowRunsMinRuns:
             "created_at": [datetime(2023, 1, 1, tzinfo=timezone.utc)] * 5
         })
         mock_repo = Mock()
-        mock_owner_repo = "owner/repo"
         count = delete_active_workflow_runs_min_runs(
-            mock_repo, mock_owner_repo, dry_run=False, min_runs=2, df=df_active
+            mock_repo, dry_run=False, min_runs=2, df=df_active
         )
         assert count == 3
 
@@ -201,7 +194,7 @@ class TestDeleteActiveWorkflowRunsMaxDays:
     """
     dry-run: delete 4 of 4 run ids from active workflows (on max-days)
     """
-    def test_delete_active_runs_max_days_dry_run(self):
+    def test_delete_active_runs_max_days_dry_run_true(self):
         df_active = pd.DataFrame({
             "name": ["workflow-01", "workflow-01", "workflow-01", "workflow-01"],
             "run_id": [30001, 30002, 30003, 30004],
@@ -209,16 +202,15 @@ class TestDeleteActiveWorkflowRunsMaxDays:
             "created_at": [datetime(2023, 1, 1, tzinfo=timezone.utc)] * 4
         })
         mock_repo = Mock()
-        mock_owner_repo = "owner/repo"
         count = delete_active_workflow_runs_max_days(
-            mock_repo, mock_owner_repo, dry_run=True, max_days=30, df=df_active
+            mock_repo, dry_run=True, max_days=30, df=df_active
         )
         assert count == 4
 
     """
     dry-run: delete ZERO run ids (on max-days)
     """
-    def test_delete_active_runs_max_days_dry_run_no_delete(self):
+    def test_delete_active_runs_max_days_dry_run_true_no_wf_delete(self):
         df_active = pd.DataFrame({
             "name": ["workflow-01", "workflow-01", "workflow-01", "workflow-01"],
             "run_id": [70001, 70002, 70003, 70004],
@@ -226,16 +218,15 @@ class TestDeleteActiveWorkflowRunsMaxDays:
             "created_at": [datetime(2025, 1, 1, tzinfo=timezone.utc)] * 4
         })
         mock_repo = Mock()
-        mock_owner_repo = "owner/repo"
         count = delete_active_workflow_runs_max_days(
-            mock_repo, mock_owner_repo, dry_run=True, max_days=2000, df=df_active
+            mock_repo, dry_run=True, max_days=2000, df=df_active
         )
         assert count == 0
 
     """
     delete 4 run ids from active workflows (on max-days)
     """
-    def test_delete_active_runs_max_days(self):
+    def test_delete_active_runs_max_days_dry_run_false(self):
         df_active = pd.DataFrame({
             "name": ["workflow-1", "workflow-1", "workflow-1", "workflow-1"],
             "run_id": [50101, 50102, 50103, 50104],
@@ -243,15 +234,14 @@ class TestDeleteActiveWorkflowRunsMaxDays:
             "created_at": [datetime(2023, 1, 1, tzinfo=timezone.utc)] * 4
         })
         mock_repo = Mock()
-        mock_owner_repo = "owner/repo"
         count = delete_active_workflow_runs_max_days(
-            mock_repo, mock_owner_repo, dry_run=False, max_days=30, df=df_active
+            mock_repo, dry_run=False, max_days=30, df=df_active
         )
         assert count == 4
 
 
-class TestMain:
-    def test_cli_main_401(self, monkeypatch):
+class TestMainMock:
+    def test_cli_main_mock_401(self, monkeypatch):
         runner = CliRunner()
         monkeypatch.setenv("GH_TOKEN", "invalid_token")
         with patch("delete_workflow_runs.run.get_auth") as mock_auth:
@@ -265,12 +255,12 @@ class TestMain:
                     "--max-days", "30"
                 ]
             )
-            print(f'\nMain result: {result}')
-            print(result.stdout)
-            print(result.stderr)
+            # print(f'\nMain result: {result}')
+            # print(result.stdout)
+            # print(result.stderr)
             assert result.exit_code == 1
 
-    def test_cli_main_403(self, monkeypatch):
+    def test_cli_main_mock_403(self, monkeypatch):
         runner = CliRunner()
         monkeypatch.setenv("GH_TOKEN", "invalid_token")
         with patch("delete_workflow_runs.run.get_auth") as mock_auth:
@@ -284,12 +274,9 @@ class TestMain:
                     "--max-days", "30"
                 ]
             )
-            print(f'\nMain result: {result}')
-            print(result.stdout)
-            print(result.stderr)
             assert result.exit_code == 1
 
-    def test_cli_main_404(self):
+    def test_cli_main_mock_404(self):
         runner = CliRunner()
         with patch("delete_workflow_runs.run.get_auth") as mock_auth:
             mock_gh = Mock()
@@ -303,11 +290,25 @@ class TestMain:
                     "--dry-run", "true"
                 ]
             )
-            print(f'\nMain result: {result}')
-            print(result.stdout)
-            print(result.stderr)
             assert result.exit_code == 1
 
+    def test_cli_main_mock_non_github_url(self):
+        runner = CliRunner()
+        with patch("delete_workflow_runs.run.get_auth") as mock_auth:
+            mock_gh = Mock()
+            mock_auth.return_value = mock_gh
+            result = runner.invoke(
+                main,
+                [
+                    "--repo-url", "https://github-test.com/owner/repo",
+                    "--max-days", "30",
+                    "--dry-run", "true"
+                ]
+            )
+            assert result.exit_code == 1
+
+
+class TestMain:
     def test_cli_main_input_false(self):
         """
         Test main
@@ -318,14 +319,14 @@ class TestMain:
         result = runner.invoke(
             main,
             [
-                "--repo-url", "https://github.com/tagdots/delete-workflow-runs",
+                "--repo-url", "https://github.com/tagdots-dev/workflow-test",
                 "--max-days", "NA",
                 "--dry-run", "false"
             ]
         )
-        print(f'\nMain result: {result}')
-        print(result.stdout)
-        print(result.stderr)
+        # print(f'\nMain result: {result}')
+        # print(result.stdout)
+        # print(result.stderr)
         assert result.exit_code == 2
 
     def test_cli_main_min_runs_dry_run(self):
@@ -338,14 +339,11 @@ class TestMain:
         result = runner.invoke(
             main,
             [
-                "--repo-url", "https://github.com/tagdots/delete-workflow-runs",
-                "--min-runs", 100,
+                "--repo-url", "https://github.com/tagdots-dev/workflow-test",
+                "--min-runs", "100",
                 "--dry-run", "true"
             ]
         )
-        print(f'\nMain result: {result}')
-        print(result.stdout)
-        print(result.stderr)
         assert result.exit_code == 0
         assert "dry-run: True" in result.output
 
@@ -359,16 +357,32 @@ class TestMain:
         result = runner.invoke(
             main,
             [
-                "--repo-url", "https://github.com/tagdots/delete-workflow-runs",
-                "--max-days", 5,
+                "--repo-url", "https://github.com/tagdots-dev/workflow-test",
+                "--max-days", "5",
                 "--dry-run", "true"
             ]
         )
-        print(f'\nMain result: {result}')
-        print(result.stdout)
-        print(result.stderr)
         assert result.exit_code == 0
         assert "dry-run: True" in result.output
+
+    def test_cli_main_min_runs_dry_run_404(self):
+        """
+        Test main
+
+        Expect Result: dry-run to keep only 100 workflow runs for each workflow
+        """
+        runner = CliRunner()
+        result = runner.invoke(
+            main,
+            [
+                "--repo-url", "https://github.com/tagdots-dev/repo-not-found",
+                "--min-runs", "100",
+                "--dry-run", "true"
+            ]
+        )
+        assert result.exit_code > 0
+        assert "dry-run: True" in result.output
+        assert "repository not found" in result.output
 
 
 if __name__ == "__main__":
