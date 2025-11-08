@@ -25,9 +25,7 @@ classifiers = [
 
 dependencies = [
   "click==8.3.0",
-  "gitpython==3.1.45",
   "pandas==2.3.3",
-  "progress==1.6.1",
   "pygithub==2.8.1",
   "rich==14.2.0",
   "setuptools==80.9.0",
