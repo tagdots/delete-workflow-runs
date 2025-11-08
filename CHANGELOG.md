@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 1.2.32 (2025-11-08)
+
+### Fix
+
+- upgrade to use Python 3.14
+
+### Refactor
+
+- improve code quality - type hint, static checking
+
 ## 1.1.22 (2025-08-24)
 
 ## 1.1.21 (2025-08-24)

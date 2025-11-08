@@ -5,7 +5,7 @@ requires = [ "setuptools", "wheel" ]
 
 [project]
 name = "delete-workflow-runs"
-version = "1.1.22"
+version = "1.2.32"
 
 readme = "README.md"
 license-files = [ "LICENSE" ]
