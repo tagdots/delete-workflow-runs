@@ -10,8 +10,9 @@ build:
 	@echo "***************************************************************************"
 	@echo "*** Upgrade to the latest python build"
 	@echo "***************************************************************************"
-	python -m pip install -U pip
-	python -m pip install -U build
+	python -m pip install -U uv
+	python -m uv pip install -U pip
+	python -m uv pip install -U build
 
 	@echo "\n"
 	@echo "***************************************************************************"
@@ -23,7 +24,7 @@ build:
 	@echo "***************************************************************************"
 	@echo "*** Install package into the current active Python environment"
 	@echo "***************************************************************************"
-	python -m pip install -e .
+	python -m uv pip install -e .
 
 test:
 	@echo "***************************************************************************"
@@ -43,7 +44,8 @@ test-install:
 	@echo "***************************************************************************"
 	@echo "*** Install test dependencies into current active Python env"
 	@echo "***************************************************************************"
-	python -m pip install -U pip
-	python -m pip install -e .[test]
+	python -m pip install -U uv
+	python -m uv pip install -U pip
+	python -m uv pip install -e .[test]
 
 .PHONY: help build test test-install

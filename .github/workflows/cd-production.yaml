@@ -11,7 +11,7 @@ on:  # yamllint disable-line rule:truthy
 
 env:
   PACKAGE_NAME: delete-workflow-runs
-  PYTHON_VERSION: '3.12.x'
+  PYTHON_VERSION: '3.14.x'
 
 permissions:
   contents: read

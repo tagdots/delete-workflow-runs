@@ -8,9 +8,9 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
 
 env:
-  HADOLINT_VERSION: 'v2.12.0'
-  PYTHON_VERSION: '3.12.x'
-  TERRAFORM_VERSION: '1.11.x'
+  HADOLINT_VERSION: 'v2.14.0'
+  PYTHON_VERSION: '3.14.x'
+  TERRAFORM_VERSION: '1.13.x'
 
 permissions:
   contents: read
