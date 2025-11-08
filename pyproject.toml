@@ -19,12 +19,12 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Software Development :: Build Tools",
 ]
 
 dependencies = [
   "click==8.3.0",
-  "click-option-group==0.5.9",
   "gitpython==3.1.45",
   "pandas==2.3.3",
   "progress==1.6.1",
