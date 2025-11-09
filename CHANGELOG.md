@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 1.2.33 (2025-11-09)
+
+### Fix
+
+- replace github context for repo-url
+- remove unused dependencies
+
 ## 1.2.32 (2025-11-08)
 
 ### Fix
