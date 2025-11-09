@@ -24,7 +24,7 @@ inputs:
 
   repo-url:
     description: 'Repository URL'
-    default: ${{ github.repository }}
+    default: ${{ github.server_url }}/${{ github.repository }}
     required: true
 
 runs:
