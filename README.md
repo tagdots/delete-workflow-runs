@@ -66,11 +66,11 @@ jobs:
 
     - name: Run delete-workflow-runs
       id: delete-workflow-runs
-      uses: tagdots/delete-workflow-runs@6384f56e65ab6e4e2e7193b3cffd3aae93b4636a # 1.1.18
+      uses: tagdots/delete-workflow-runs@4303b7da352de2004b0c5f118420cf9f1d63a370 # 1.2.33
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        repo-url: ${{ github.repository }}
+        repo-url: ${{ github.server_url }}/${{ github.repository }}
         min-runs: 10
         dry-run: true
 
@@ -94,16 +94,16 @@ Get the data output (data_dict.log) and extrat fields if necessary to:
 
 <br>
 
-### Example 2 - Summary (Irreversible delete)
+### Example 2 - Summary (Permanent delete)
 
 | Input | Workflow Spec | Result
 |-------|-------------|----------|
 | `scheduled run` | `- cron: '30 17 * * *'` | Run daily at 5:30 pm UTC
 | `github token permissions` | `actions: write`<br>`contents: read` | Delete requires write permission in `actions` |
-| `max-days` | `10` | Keep workflow runs in the last 10 days for each workflow |
+| `max-days` | `10` | Keep runs in the last 10 days for each workflow |
 | `dry-run` | `false` | a. Delete workflow runs<br>b. Get the JSON log file |
 
-### Example 2 - Workflow (Irreversible delete)
+### Example 2 - Workflow (Permanent delete)
 ```yml
 name: delete-github-workflow-runs
 
@@ -124,11 +124,11 @@ jobs:
       contents: read
 
     - id: delete-workflow-runs
-      uses: tagdots/delete-workflow-runs@6384f56e65ab6e4e2e7193b3cffd3aae93b4636a # 1.1.18
+      uses: tagdots/delete-workflow-runs@4303b7da352de2004b0c5f118420cf9f1d63a370 # 1.2.33
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        repo-url: ${{ github.repository }}
+        repo-url: ${{ github.server_url }}/${{ github.repository }}
         max-days: 10
         dry-run: false
 
@@ -182,7 +182,7 @@ Options:
 ```
 (test) ~/work/test $ delete-workflow-runs --min-runs 10 --dry-run true --repo-url https://github.com/tagdots/test
 
-🚀 Starting to Delete GitHub Action workflows (dry-run: True, min-runs: 10, max-days: None)
+🚀 Starting Delete GitHub Action workflows (dry-run: True, min-runs: 10, max-days: None)
 
 💪 Gathering All Workflow Runs...
 Processing data... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
@@ -242,7 +242,7 @@ Enough API limit to run this delete now? ✅ yes
 ```
 (test) ~/work/test $ delete-workflow-runs --max-days 10 --dry-run false --repo-url https://github.com/tagdots/test
 
-🚀 Starting to Delete GitHub Action workflows (dry-run: False, min-runs: None, max-days: 10)
+🚀 Starting Delete GitHub Action workflows (dry-run: False, min-runs: None, max-days: 10)
 
 💪 Gathering All Workflow Runs...
 Processing data... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
