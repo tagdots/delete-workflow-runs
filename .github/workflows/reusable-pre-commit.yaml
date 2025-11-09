@@ -53,7 +53,7 @@ jobs:
         terraform_version: ${{ env.TERRAFORM_VERSION }}
 
     - name: Install tflint
-      uses: terraform-linters/setup-tflint@ae78205cfffec9e8d93fd2b3115c7e9d3166d4b6 # v5.0.0
+      uses: terraform-linters/setup-tflint@4cb9feea73331a35b422df102992a03a44a3bb33 # v6.2.1
 
     - name: Run pre-commit on everything
       run: pre-commit run -a -v
@@ -68,7 +68,7 @@ jobs:
 
     - name: Run Checkov Github Action
       id: checkov
-      uses: bridgecrewio/checkov-action@d146511ffb733a9a456c9ffc05cd462122037354 # v12.3069.0
+      uses: bridgecrewio/checkov-action@5abded944c5e3fb597c3fcb4f2a5aa83d9c73f8b # v12.3070.0
       with:
         log_level: WARNING
         quiet: false
