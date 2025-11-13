@@ -5,6 +5,7 @@ changelog:
   exclude:
     authors:
       - tagdots-owner
+
   categories:
     - title: "🚀 New features"
       labels:
@@ -17,6 +18,8 @@ changelog:
         - fix
         - hotfix
         - bugfix
+    - title: "🛠️ Maintenance"
+      labels:
         - dependencies
     - title: "👒 Others"
       labels:
