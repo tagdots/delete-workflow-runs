@@ -1,31 +1,43 @@
 ---
 # NOTE: this file is managed by terraform
 
+# release category: New Features
 feature:
-  - head-branch: ['^feature']
+  - head-branch:
+    - '^feat'
 
+# release category: Change Features
 enhancement:
-  - head-branch: ['^perf']
-  - head-branch: ['^refactor']
+  - head-branch:
+    - '^perf'
+    - '^refactor'
 
-bugfix:
-  - head-branch: ['^bugfix']
-
-hotfix:
-  - head-branch: ['^hotfix']
-
+# release category: Fixes
 fix:
-  - head-branch: ['^fix']
+  - head-branch:
+    - '^bugfix'
+    - '^hotfix'
+    - '^fix'
 
+# release category: Maintenance
+dependencies:
+  - head-branch:
+    - '^dep/'
+
+# release category: Others
 build:
-  - head-branch: ['^build']
-  - head-branch: ['^ci']
+  - head-branch:
+    - '^build'
+    - '^ci'
 
 documentation:
-  - head-branch: ['^docs']
+  - head-branch:
+    - '^doc'
 
 style:
-  - head-branch: ['^style']
+  - head-branch:
+    - '^style'
 
 test:
-  - head-branch: ['^test']
+  - head-branch:
+    - '^test'
