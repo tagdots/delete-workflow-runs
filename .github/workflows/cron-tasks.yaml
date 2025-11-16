@@ -63,7 +63,7 @@ jobs:
         compression-level: 6
 
     - id: coverage-badge
-      uses: tagdots/setup-badge-action@c6514d52c3cef8d85e05fcf20b3b8c5f965d6b50 # 1.0.17
+      uses: tagdots/setup-badge-action@294661aa1f149b59dfe1cd187539eca7f8f0fabf # 1.0.18
       with:
         badge-name: coverage
         badge-url: https://github.com/tagdots-dev/workflow-test/actions/workflows/cron-tasks.yaml
@@ -77,7 +77,7 @@ jobs:
 
     steps:
     - id: badge-marketplace
-      uses: tagdots/setup-badge-action@c6514d52c3cef8d85e05fcf20b3b8c5f965d6b50 # 1.0.17
+      uses: tagdots/setup-badge-action@294661aa1f149b59dfe1cd187539eca7f8f0fabf # 1.0.18
       with:
         badge-name: marketplace
         badge-url: https://github.com/marketplace/actions/delete-github-workflow-runs
@@ -107,7 +107,7 @@ jobs:
 
     - name: Run delete-workflow-runs
       id: delete-workflow-runs
-      uses: tagdots/delete-workflow-runs@f2590820b6e8143d80d1a1443ac23669a121b042 # 1.2.32
+      uses: tagdots/delete-workflow-runs@4303b7da352de2004b0c5f118420cf9f1d63a370 # 1.2.33
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -160,7 +160,7 @@ jobs:
     steps:
     - name: Run delete-branches
       id: delete-branches
-      uses: tagdots/delete-branches@82c6e23733f0fc5cb51987225779ff5db0b42560 # 1.2.14
+      uses: tagdots/delete-branches@1067f6cf756a462d2da56cffae2df37ea15b600e # 1.2.15
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -181,7 +181,7 @@ jobs:
       id: update-pre-commit
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      uses: tagdots/update-pre-commit-action@7b2124d4ac1abdaf462b2ee85312e2b564aa2709 # 1.0.27
+      uses: tagdots/update-pre-commit-action@a80688d12cf761973e340674bcf552af366afba5 # 1.0.28
       with:
         file: .pre-commit-config.yaml
         dry-run: false
