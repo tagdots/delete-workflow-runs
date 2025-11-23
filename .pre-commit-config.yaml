@@ -1,6 +1,6 @@
 repos:
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.34.1
+  rev: 0.35.0
   hooks:
   - name: Check GitHub Actions Workflows
     id: check-github-workflows
@@ -63,7 +63,7 @@ repos:
   - name: Python flake8
     id: flake8
 - repo: https://github.com/antonbabenko/pre-commit-terraform
-  rev: v1.103.0
+  rev: v1.104.0
   hooks:
   - name: Terraform format
     id: terraform_fmt
