@@ -5,6 +5,7 @@ usage:
 	@echo "\tmake build"
 	@echo "\tmake test"
 	@echo "\tmake test-install"
+	@echo "\tmake local-install"
 
 build:
 	@echo "***************************************************************************"
@@ -47,5 +48,13 @@ test-install:
 	python -m pip install -U uv
 	python -m uv pip install -U pip
 	python -m uv pip install -e .[test]
+
+local-install:
+	@echo "***************************************************************************"
+	@echo "*** Install local dependencies into current active Python env"
+	@echo "***************************************************************************"
+	python -m pip install -U uv
+	python -m uv pip install -U pip
+	python -m uv pip install -e .[local,test]
 
 .PHONY: help build test test-install

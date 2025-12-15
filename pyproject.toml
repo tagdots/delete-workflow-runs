@@ -28,17 +28,18 @@ dependencies = [
   "pandas==2.3.3",
   "pygithub==2.8.1",
   "rich==14.2.0",
-  "setuptools==80.9.0",
-  "virtualenv==20.35.4",
+]
+
+optional-dependencies.local = [
+  "commitizen",
+  "pre-commit",
 ]
 
 optional-dependencies.test = [
   "build",
-  "commitizen",
   "coverage",
   "flake8",
   "isort",
-  "pre-commit",
   "pyscan-rs",
   "pytest",
   "twine",

@@ -32,7 +32,7 @@ jobs:
     - shell: bash
       run: |
         # install package
-        make test-install
+        make local-install
 
     - shell: bash
       run: |
