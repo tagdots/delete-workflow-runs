@@ -2,10 +2,13 @@
 # NOTE: this file is managed by terraform
 # https://devtodevops.com/hadolint-dockerfile/
 
-failure-threshold: info  # error, warning, info, style, ignore, none
-format: tty  # tty, json, checkstyle, codeclimate, gitlab_codeclimate, gnu, codacy, sonarqube, sarif
-no-color: true
+failure-threshold: error  # error, warning, info, style, ignore, none
+format: tty  # tty, json, checkstyle, codeclimate, gitlab_codeclimate
+no-color: false
 no-fail: false
-strict-labels: true
+strict-labels: false
 verbose: false
 ignored:
+  - DL3008 # pin version: apt install
+  - DL3013 # pin version: pip install
+  - SC1091 # shellcheck source
