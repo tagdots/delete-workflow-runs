@@ -24,10 +24,10 @@ classifiers = [
 ]
 
 dependencies = [
-  "click==8.3.1",
-  "pandas==2.3.3",
-  "pygithub==2.8.1",
-  "rich==14.2.0",
+  "click==8.4.2",
+  "pandas==3.0.3",
+  "pygithub==2.9.1",
+  "rich==15.0.0",
 ]
 
 optional-dependencies.local = [
