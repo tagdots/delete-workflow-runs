@@ -1,19 +1,16 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-
-requires = [ "setuptools", "wheel" ]
+requires = [ "setuptools" ]
 
 [project]
 name = "delete-workflow-runs"
 version = "1.2.33"
-
 readme = "README.md"
 license-files = [ "LICENSE" ]
 authors = [
   { name = "developers", email = "developers@tagdots.com" },
 ]
 requires-python = ">=3.12.10"
-
 classifiers = [
   "Intended Audience :: Developers",
   "Programming Language :: Python :: 3 :: Only",
@@ -22,19 +19,16 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
   "Topic :: Software Development :: Build Tools",
 ]
-
 dependencies = [
-  "click==8.3.1",
-  "pandas==2.3.3",
-  "pygithub==2.8.1",
-  "rich==14.2.0",
+  "click==8.4.2",
+  "pandas==3.0.3",
+  "pygithub==2.9.1",
+  "rich==15.0.0",
 ]
-
 optional-dependencies.local = [
   "commitizen",
   "pre-commit",
 ]
-
 optional-dependencies.test = [
   "build",
   "coverage",
@@ -44,13 +38,11 @@ optional-dependencies.test = [
   "pytest",
   "twine",
 ]
-
 urls.Changelog = "https://github.com/tagdots/delete-workflow-runs/blob/main/CHANGELOG.md"
 urls.Documentation = "https://github.com/tagdots/delete-workflow-runs/blob/main/README.md"
 urls.Homepage = "https://github.com/tagdots"
 urls.Issues = "https://github.com/tagdots/delete-workflow-runs/issues"
 urls.Repository = "https://github.com/tagdots/delete-workflow-runs"
-
 scripts.delete-workflow-runs = "delete_workflow_runs.run:main"
 
 [dependency-groups]
@@ -58,11 +50,9 @@ test = [
   "coverage[toml]",
 ]
 
-[tool.setuptools.packages.find]
-where = [ "src" ]
-
-[tool.setuptools.dynamic]
-version = { attr = "src.delete_workflow_runs.__init__" }
+[tool.setuptools]
+packages.find.where = [ "src" ]
+dynamic.version = { attr = "src.delete_workflow_runs.__init__" }
 
 [tool.pyproject-fmt]
 column_width = 125
@@ -70,26 +60,22 @@ indent = 2
 keep_full_version = true
 
 [tool.coverage]
+run.branch = true
+run.command_line = "-m pytest -vs tests/"
+run.include = [ "src/delete_workflow_runs/*" ]
+run.omit = [ "tests/*" ]
+report.fail_under = 80
+report.include = [ "src/delete_workflow_runs/*" ]
+report.show_missing = false
 source = [ "." ]
-
-[tool.coverage.run]
-branch = true
-command_line = "-m pytest -vs tests/"
-include = [ "src/delete_workflow_runs/*" ]
-omit = [ "tests/*" ]
-
-[tool.coverage.report]
-fail_under = 80
-show_missing = false
-include = [ "src/delete_workflow_runs/*" ]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-major_version_zero = false
-tag_format = "$version"
-update_changelog_on_bump = true
+version_scheme = "pep440"
+version_provider = "pep621"
 version_files = [
   "src/delete_workflow_runs/__init__.py:__version__",
 ]
-version_provider = "pep621"
-version_scheme = "pep440"
+major_version_zero = false
+tag_format = "$version"
+update_changelog_on_bump = true
