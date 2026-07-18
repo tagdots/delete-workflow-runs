@@ -1,4 +1,4 @@
-<!-- NOTE: this file is managed by terraform -->
+<!-- NOTE: Terraform-managed template -->
 # Security
 
 This document outlines the security policy and procedures at TagDots, Inc..
