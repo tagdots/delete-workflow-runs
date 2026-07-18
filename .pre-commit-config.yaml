@@ -48,7 +48,7 @@ repos:
     id: trailing-whitespace
     exclude: ^tests/|^.gitignore$
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: v2.25.2
+  rev: v2.25.3
   hooks:
   - name: Python format pyproject.toml
     id: pyproject-fmt
