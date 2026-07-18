@@ -1,5 +1,5 @@
 ---
-# NOTE: this file is managed by terraform
+# NOTE: Terraform-managed template
 
 name: 💡 Request A Feature or Change
 about: Request A Feature or Change
