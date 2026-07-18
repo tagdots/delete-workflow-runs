@@ -1,6 +1,6 @@
 ---
 
-name: CodeQL
+name: re-codeql
 
 on:
   schedule:
