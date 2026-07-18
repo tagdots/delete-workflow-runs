@@ -1,5 +1,5 @@
 ---
-# NOTE: this file is managed by terraform
+# NOTE: Terraform-managed template
 # https://devtodevops.com/hadolint-dockerfile/
 
 failure-threshold: error  # error, warning, info, style, ignore, none
