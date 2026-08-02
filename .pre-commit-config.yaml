@@ -7,7 +7,7 @@ repos:
     args:
     - --verbose
 - repo: https://github.com/hadolint/hadolint
-  rev: v2.14.0
+  rev: v2.15.1
   hooks:
   - name: Check Dockerfile
     id: hadolint
@@ -48,7 +48,7 @@ repos:
     id: trailing-whitespace
     exclude: ^tests/|^.gitignore$
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: v2.25.3
+  rev: v2.26.0
   hooks:
   - name: Python format pyproject.toml
     id: pyproject-fmt
