@@ -1,13 +1,13 @@
 repos:
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.37.4
+  rev: 0.38.0
   hooks:
   - name: Check GitHub Actions Workflows
     id: check-github-workflows
     args:
     - --verbose
 - repo: https://github.com/hadolint/hadolint
-  rev: v2.14.0
+  rev: v2.15.1
   hooks:
   - name: Check Dockerfile
     id: hadolint
@@ -48,7 +48,7 @@ repos:
     id: trailing-whitespace
     exclude: ^tests/|^.gitignore$
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: v2.25.3
+  rev: v2.27.0
   hooks:
   - name: Python format pyproject.toml
     id: pyproject-fmt
