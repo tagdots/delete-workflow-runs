@@ -1,8 +1,7 @@
 ---
-
 name: sidecar-pr-target
 
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   pull_request_target:
 
   workflow_dispatch:
@@ -14,38 +13,40 @@ permissions:
 
 jobs:
   labeler:
-
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout source code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      with:
-        repository: ${{ github.repository }}
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
 
-    # https://github.com/marketplace/actions/labeler
-    - id: label-pr
-      uses: actions/labeler@b8dd2d9be0f68b860e7dae5dae7d772984eacd6d #v6.2.0
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Label PR
+        id: label-pr # https://github.com/marketplace/actions/labeler
+        uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 #v7.0.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-    - run: echo "${{ steps.label-pr.outputs.all-labels }}"
+      - name: Get labeled PR
+        shell: bash
+        run: echo "${{ steps.label-pr.outputs.all-labels }}"
 
   notify-slack:
+    if: always()
+    needs: labeler
     runs-on: ubuntu-latest
 
     steps:
-
-    - name: Slack message on PR activities
-      uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
-      with:
-        method: chat.postMessage
-        token: "${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}"
-        payload: |
-          channel: "${{ secrets.SECRET_SLACK_CHANNEL_PR }}"
-          text: ":fire: *Pull Request (re)opened or updated.*
-          ```
-          Repo  : ${{ github.repository }}\n
-          Branch: ${{ github.event.pull_request.head.ref }}\n
-          PR URL: ${{ github.event.pull_request.html_url }}
-          ```"
+      - name: Slack message on PR # https://github.com/slackapi/slack-github-action
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}
+          payload: >
+            {
+              "channel": "${{ secrets.SECRET_SLACK_CHANNEL_PR }}",
+              "text": ":fire: *Pull Request (re)opened or updated.*```
+                \nRepo  : ${{ github.repository }}
+                \nBranch: ${{ github.event.pull_request.head.ref }}
+                \nPR URL: ${{ github.event.pull_request.html_url }}```"
+            }
