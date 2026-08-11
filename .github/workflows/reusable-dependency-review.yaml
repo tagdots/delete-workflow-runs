@@ -1,25 +1,24 @@
 ---
-
 name: re-dependency-review
 
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   workflow_call:
 
 permissions:
   contents: read
 
 jobs:
-  review: # https://github.com/actions/dependency-review-action
+  review:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Checkout source code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-    - name: Pull Request Dependency Review
-      uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # 5.0.0
-      with:
-        license-check: false
-        vulnerability-check: true
-        show-openssf-scorecard: false
-        fail-on-severity: low
+      - name: Pull Request dependency review # https://github.com/marketplace/actions/dependency-review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # 5.0.0
+        with:
+          license-check: false
+          vulnerability-check: true
+          show-openssf-scorecard: false
+          fail-on-severity: low
