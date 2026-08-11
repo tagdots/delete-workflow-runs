@@ -1,11 +1,8 @@
 ---
-
 name: CD-staging
 
-on:  # yamllint disable-line rule:truthy
-
+on: # yamllint disable-line rule:truthy
   pull_request:
-
     branches:
       - main
 
@@ -13,17 +10,17 @@ on:  # yamllint disable-line rule:truthy
       - closed
 
 env:
-  PACKAGE_NAME: delete-workflow-runs
-  PYTHON_VERSION: '3.14.x'
+  PROJECT_NAME: delete-workflow-runs
+  PACKAGE_NAME: delete_workflow_runs
+  PYTHON_VERSION: "3.14.x"
+  UV_VERSION: "0.12.3"
 
 permissions:
   contents: read
 
 jobs:
-
   push-git-tag:
     if: ${{ startsWith(github.head_ref, 'release/') && github.event.pull_request.merged == true }}
-
     runs-on: ubuntu-latest
 
     env:
@@ -36,101 +33,107 @@ jobs:
       VERSION: ${{ steps.set-tag.outputs.VERSION }}
 
     steps:
-
-    - name: Generate a token from Github App
       # instead of PAT, github_app_id and github_app_pem_file are used by this workflow because
       # we have tag-based ruleset in place to restrict ACTOR from bypassing tag protection.
-      id: generate-token
-      uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-      with:
-        app-id: ${{ secrets.SECRET_GITHUB_APP_ID }}
-        private-key: ${{ secrets.SECRET_GITHUB_APP_PEM_FILE }}
 
-    - name: Checkout source code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      with:
-        token: ${{ steps.generate-token.outputs.token }}
+      - name: Generate a token from Github App # https://github.com/marketplace/actions/create-github-app-token
+        id: generate-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.SECRET_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SECRET_GITHUB_APP_PEM_FILE }}
 
-    - id: set-tag
-      shell: bash
-      env:
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-      run: |
-        # parse out the version
-        GITHUB_SPEC_VER=${GITHUB_HEAD_REF#release/}
-        echo "VERSION=${GITHUB_SPEC_VER}" >> "$GITHUB_OUTPUT"
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
 
-        # create and push a lightweight tag
-        git tag ${GITHUB_SPEC_VER}
-        git push origin ${GITHUB_SPEC_VER}
+      - name: Tag and Push
+        id: set-tag
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          # parse out the version
+          GITHUB_SPEC_VER=${GITHUB_HEAD_REF#release/}
+          echo "VERSION=${GITHUB_SPEC_VER}" >> "$GITHUB_OUTPUT"
+
+          # create and push a lightweight tag
+          git tag ${GITHUB_SPEC_VER}
+          git push origin ${GITHUB_SPEC_VER}
 
   publish-TestPyPI:
-
     needs: [push-git-tag]
-
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Checkout source code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Setup Python # https://github.com/marketplace/actions/setup-python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
 
-    - shell: bash
-      run: |
-        # install dependencies and build
-        make test-install
-        make build
+      - name: Make build
+        shell: bash
+        run: make build
 
-    # https://github.com/marketplace/actions/pypi-publish
-    - name: Publish package distributions to TestPyPI
-      uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
-      with:
-        attestations: false
-        packages-dir: dist/
-        password: ${{ secrets.SECRET_PYPITEST }}
-        print-hash: true
-        repository-url: https://test.pypi.org/legacy/
-        verbose: true
-        verify-metadata: true
+      - name: Publish package distributions to TestPyPI # https://github.com/marketplace/actions/pypi-publish
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          attestations: false
+          packages-dir: dist/
+          password: ${{ secrets.SECRET_PYPITEST }}
+          print-hash: true
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
+          verify-metadata: true
 
   validate-TestPyPI:
-
     needs: [publish-TestPyPI]
-
     runs-on: ubuntu-latest
 
     steps:
+      - name: Validate after short wait to ensure publish is complete
+        shell: bash
+        run: sleep 15
 
-    - name: Validate after short wait to ensure publish is complete
-      shell: bash
-      run: sleep 15
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Checkout source code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Setup Python # https://github.com/marketplace/actions/setup-python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: "true"
 
-    - shell: bash
-      env:
-        INDEX_URL: "https://test.pypi.org/simple/"
-        EXTRA_INDEX_URL: "https://pypi.org/simple/"
-      run: |
-        # install package from TestPyPI and run app to show version
-        pip install ${{ env.PACKAGE_NAME }} --index-url ${{ env.INDEX_URL }} --extra-index-url ${{ env.EXTRA_INDEX_URL }}
-        ${{ env.PACKAGE_NAME }} --version
+      - name: Install main project packages
+        shell: bash
+        run: uv sync
+
+      - name: Install package from TestPyPI and run app to show version
+        shell: bash
+        env:
+          INDEX_URL: "https://test.pypi.org/simple/"
+          EXTRA_INDEX_URL: "https://pypi.org/simple/"
+        run: |
+          uv run pip install ${{ env.PROJECT_NAME }} --index-url ${{ env.INDEX_URL }} --extra-index-url ${{ env.EXTRA_INDEX_URL }}
+          ${{ env.PROJECT_NAME }} --version
 
   notify-slack:
     if: always()
     needs: [push-git-tag, publish-TestPyPI, validate-TestPyPI]
-
     runs-on: ubuntu-latest
 
     outputs:
@@ -138,41 +141,40 @@ jobs:
       TAG_NAME: ${{ steps.get-overall-jobs-results.outputs.TAG_NAME }}
 
     steps:
+      - name: Get overall jobs results
+        id: get-overall-jobs-results
+        shell: bash
+        run: |
+          # get overall result from all of the previous jobs
+          if "${{ needs.push-git-tag.result == 'success' && needs.publish-TestPyPI.result == 'success' && needs.validate-TestPyPI.result == 'success' }}"; then
+            echo "WORKFLOW_RESULT=:white_check_mark:" >> "$GITHUB_OUTPUT"
+          elif "${{ needs.push-git-tag.result == 'skipped' && needs.publish-TestPyPI.result == 'skipped' && needs.validate-TestPyPI.result == 'skipped' }}"; then
+            echo "WORKFLOW_RESULT=:fast_forward:" >> "$GITHUB_OUTPUT"
+          else
+            echo "WORKFLOW_RESULT=:no_entry:" >> "$GITHUB_OUTPUT"
+          fi
 
-    - name: Get Overall Jobs Results
-      id: get-overall-jobs-results
-      shell: bash
-      run: |
-        # get overall result from all of the previous jobs
-        if "${{ needs.push-git-tag.result == 'success' && needs.publish-TestPyPI.result == 'success' && needs.validate-TestPyPI.result == 'success' }}"; then
-          echo "WORKFLOW_RESULT=:white_check_mark:" >> "$GITHUB_OUTPUT"
-        elif "${{ needs.push-git-tag.result == 'skipped' && needs.publish-TestPyPI.result == 'skipped' && needs.validate-TestPyPI.result == 'skipped' }}"; then
-          echo "WORKFLOW_RESULT=:fast_forward:" >> "$GITHUB_OUTPUT"
-        else
-          echo "WORKFLOW_RESULT=:no_entry:" >> "$GITHUB_OUTPUT"
-        fi
+          # get tag name
+          if ${{ needs.push-git-tag.outputs.VERSION == '' }}; then
+            echo "TAG_NAME=not-available" >> "$GITHUB_OUTPUT"
+          else
+            echo "TAG_NAME=${{ needs.push-git-tag.outputs.VERSION }}" >> "$GITHUB_OUTPUT"
+          fi
 
-        # get tag name
-        if ${{ needs.push-git-tag.outputs.VERSION == '' }}; then
-          echo "TAG_NAME=not-available" >> "$GITHUB_OUTPUT"
-        else
-          echo "TAG_NAME=${{ needs.push-git-tag.outputs.VERSION }}" >> "$GITHUB_OUTPUT"
-        fi
-
-    - name: Post message to Slack
-      uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
-      with:
-        method: chat.postMessage
-        token: "${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}"
-        payload: |
-          channel: "${{ secrets.SECRET_SLACK_CHANNEL_CICD }}"
-          text: "
-              *Repository: ${{ github.repository }}*\n
-              *Workflow : ${{ github.workflow }} ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}*\n
-              *Tag Name : ${{ steps.get-overall-jobs-results.outputs.TAG_NAME }}*
-              ```
-              URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n
-              Job: push-git-tag      - ${{ needs.push-git-tag.result }}\n
-              Job: publish-TestPyPI  - ${{ needs.publish-TestPyPI.result }}\n
-              Job: validate-TestPyPI - ${{ needs.validate-TestPyPI.result }}
-              ```"
+      - name: Post message to Slack
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        with:
+          method: chat.postMessage
+          token: "${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}"
+          payload: |
+            channel: "${{ secrets.SECRET_SLACK_CHANNEL_CICD }}"
+            text: "
+                *Repository: ${{ github.repository }}*\n
+                *Workflow : ${{ github.workflow }} ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}*\n
+                *Tag Name : ${{ steps.get-overall-jobs-results.outputs.TAG_NAME }}*
+                ```
+                URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n
+                Job: push-git-tag      - ${{ needs.push-git-tag.result }}\n
+                Job: publish-TestPyPI  - ${{ needs.publish-TestPyPI.result }}\n
+                Job: validate-TestPyPI - ${{ needs.validate-TestPyPI.result }}
+                ```"

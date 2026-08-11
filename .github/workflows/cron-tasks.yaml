@@ -1,25 +1,26 @@
 ---
-
 name: cron-tasks
 
 on:
   schedule:
-    - cron: '30 3 * * 0'
+    - cron: "30 3 * * 0"
 
   workflow_dispatch:
 
 env:
-  PYTHON_VERSION: '3.14.x'
+  PYTHON_VERSION: "3.14.x"
+  UV_VERSION: "0.12.3"
 
 permissions:
-    actions: read
-    contents: read
-    issues: read
-    pull-requests: read
+  actions: read
+  contents: read
+  issues: read
+  pull-requests: read
 
 jobs:
   pre-badge-coverage:
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
 
@@ -28,70 +29,85 @@ jobs:
       COV_RUN: ${{ steps.get-coverage-results.outputs.COV_RUN }}
 
     steps:
-    - id: checkout-source-code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - id: setup-Python
-      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Setup Python # https://github.com/marketplace/actions/setup-python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - id: install-python-deps
-      run: make test-install
+      - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: "true"
 
-    - id: coverage-run
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        PYTHONUNBUFFERED: "1"
-      run: make test
+      - name: Install test dependency-group
+        shell: bash
+        run: make test-only
 
-    - id: get-coverage-results
-      run: |
-        # get coverage results
-        echo "COV_RUN=${{ steps.run-coverage.outcome }}"                  >> "$GITHUB_OUTPUT"
-        echo "COV_PER=$(coverage report | grep TOTAL | awk '{print $6}')" >> "$GITHUB_OUTPUT"
+      - name: Run coverage
+        id: run-coverage
+        shell: bash
+        run: make test
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONUNBUFFERED: "1"
 
-    - id: upload-coverage
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      with:
-        name: coverage
-        path: htmlcov/
-        if-no-files-found: error
-        retention-days: 1
-        overwrite: true
-        compression-level: 6
+      - name: Get coverage results
+        id: get-coverage-results
+        shell: bash
+        run: |
+          echo "COV_RUN=${{ steps.run-coverage.outcome }}"                  >> "$GITHUB_OUTPUT"
+          echo "COV_PER=$(uv run coverage report | grep TOTAL | awk '{print $6}')" >> "$GITHUB_OUTPUT"
 
-  badge-coverage: # https://github.com/tagdots/setup-badge-action
+      - name: Upload coverage # https://github.com/marketplace/actions/upload-artifact
+        if: ${{ !env.ACT }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage
+          path: htmlcov/
+          if-no-files-found: error
+          retention-days: 1
+          overwrite: true
+          compression-level: 6
+
+  badge-coverage:
     runs-on: ubuntu-latest
     needs: pre-badge-coverage
+
     permissions:
       contents: write
 
     steps:
-    - id: coverage-badge
-      uses: tagdots/setup-badge-action@294661aa1f149b59dfe1cd187539eca7f8f0fabf # 1.0.18
-      with:
-        badge-name: coverage
-        badge-url: https://github.com/tagdots/delete-workflow-runs/actions/workflows/cron-tasks.yaml
-        label: "Code Coverage"
-        message: "${{ needs.pre-badge-coverage.outputs.COV_PER }}"
+      - name: Run setup-badge-action # https://github.com/tagdots/setup-badge-action
+        id: badge-coverage
+        uses: tagdots/setup-badge-action@294661aa1f149b59dfe1cd187539eca7f8f0fabf # 1.0.18
+        with:
+          badge-name: coverage
+          badge-url: https://github.com/tagdots-dev/python-test/actions/workflows/cron-tasks.yaml
+          label: "Code Coverage"
+          message: "${{ needs.pre-badge-coverage.outputs.COV_PER }}"
 
-  badge-marketplace: # https://github.com/tagdots/setup-badge-action
+  badge-marketplace:
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
 
     steps:
-    - id: badge-marketplace
-      uses: tagdots/setup-badge-action@294661aa1f149b59dfe1cd187539eca7f8f0fabf # 1.0.18
-      with:
-        badge-name: marketplace
-        badge-url: https://github.com/marketplace/actions/delete-github-workflow-runs
-        label: Marketplace
-        message: 'Delete GitHub Workflow Runs'
-        message-color: FF6360
+      - name: Run setup-badge-action # https://github.com/tagdots/setup-badge-action
+        id: badge-marketplace
+        uses: tagdots/setup-badge-action@294661aa1f149b59dfe1cd187539eca7f8f0fabf # 1.0.18
+        with:
+          badge-name: marketplace
+          badge-url: https://github.com/marketplace/actions/delete-github-workflow-runs
+          label: Marketplace
+          message: "Delete GitHub Workflow Runs"
+          message-color: FF6360
 
-  stale-workflow-runs: # https://github.com/tagdots/delete-workflow-runs
+  stale-workflow-runs:
     runs-on: ubuntu-latest
 
     permissions:
@@ -110,33 +126,32 @@ jobs:
       ORPHAN_CT: ${{ steps.get_data.outputs.orphan_ct }}
 
     steps:
-    - name: Run delete-workflow-runs
-      id: delete-workflow-runs
-      uses: tagdots/delete-workflow-runs@4303b7da352de2004b0c5f118420cf9f1d63a370 # 1.2.33
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        repo-url: ${{ github.server_url }}/${{ github.repository }}
-        max-days: 10
-        dry-run: false
+      - name: Run delete-workflow-runs # https://github.com/tagdots/delete-workflow-runs
+        id: delete-workflow-runs
+        uses: tagdots/delete-workflow-runs@4303b7da352de2004b0c5f118420cf9f1d63a370 # 1.2.33
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          repo-url: ${{ github.server_url }}/${{ github.repository }}
+          max-days: 10
+          dry-run: false
 
-    - name: Get data and set GITHUB_OUTPUT
-      id: get_data
-      shell: bash
-      run: |
-        # get data from the last step to set GITHUB_OUTPUT
-        cat data_dict.log | jq .
-        echo "dry_run=$(cat data_dict.log | jq '."dry-run"')" >> $GITHUB_OUTPUT
-        echo "repo_url=$(cat data_dict.log | jq '."repo-url"')" >> $GITHUB_OUTPUT
-        echo "max_days=$(cat data_dict.log | jq '."max-days"')" >> $GITHUB_OUTPUT
-        echo "min_runs=$(cat data_dict.log | jq '."min-runs"')" >> $GITHUB_OUTPUT
-        echo "limit_usage_est=$(cat data_dict.log | jq '."core-limit-usage-estimate"')" >> $GITHUB_OUTPUT
-        echo "limit_rem=$(cat data_dict.log | jq '."core-limit-remaining"')" >> $GITHUB_OUTPUT
-        echo "limit_res=$(cat data_dict.log | jq '."core-limit-reset"')" >> $GITHUB_OUTPUT
-        echo "active_ct=$(cat data_dict.log | jq '."delete-active-workflow-runs-count"')" >> $GITHUB_OUTPUT
-        echo "orphan_ct=$(cat data_dict.log | jq '."delete-orphan-workflow-runs-count"')" >> $GITHUB_OUTPUT
+      - name: Get data and set GITHUB_OUTPUT
+        id: get_data
+        shell: bash
+        run: |
+          cat data_dict.log | jq .
+          echo "dry_run=$(cat data_dict.log | jq '."dry-run"')" >> $GITHUB_OUTPUT
+          echo "repo_url=$(cat data_dict.log | jq '."repo-url"')" >> $GITHUB_OUTPUT
+          echo "max_days=$(cat data_dict.log | jq '."max-days"')" >> $GITHUB_OUTPUT
+          echo "min_runs=$(cat data_dict.log | jq '."min-runs"')" >> $GITHUB_OUTPUT
+          echo "limit_usage_est=$(cat data_dict.log | jq '."core-limit-usage-estimate"')" >> $GITHUB_OUTPUT
+          echo "limit_rem=$(cat data_dict.log | jq '."core-limit-remaining"')" >> $GITHUB_OUTPUT
+          echo "limit_res=$(cat data_dict.log | jq '."core-limit-reset"')" >> $GITHUB_OUTPUT
+          echo "active_ct=$(cat data_dict.log | jq '."delete-active-workflow-runs-count"')" >> $GITHUB_OUTPUT
+          echo "orphan_ct=$(cat data_dict.log | jq '."delete-orphan-workflow-runs-count"')" >> $GITHUB_OUTPUT
 
-  stale-issues-prs: # https://github.com/actions/stale
+  stale-issues-prs:
     runs-on: ubuntu-latest
 
     permissions:
@@ -146,16 +161,16 @@ jobs:
       pull-requests: write
 
     steps:
-    - name: Run stale-issues-prs
-      id: stale-issues-prs
-      uses: actions/stale@1e223db275d687790206a7acac4d1a11bd6fe629 # v10.4.0
-      with:
-        stale-issue-message: 'This issue is stale because it has been open 5 days with no activity. Remove stale label or comment or this will be closed in 3 days after stale'
-        days-before-stale: 5
-        days-before-close: 3
-        delete-branch: true
+      - name: Run stale-issues-prs # https://github.com/actions/stale
+        id: stale-issues-prs
+        uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
+        with:
+          stale-issue-message: "This issue is stale because it has been open 5 days with no activity. Remove stale label or comment or this will be closed in 3 days after stale"
+          days-before-stale: 5
+          days-before-close: 3
+          delete-branch: true
 
-  stale-branches: # https://github.com/tagdots/delete-branches
+  stale-branches:
     runs-on: ubuntu-latest
 
     permissions:
@@ -163,18 +178,18 @@ jobs:
       pull-requests: read
 
     steps:
-    - name: Run delete-branches
-      id: delete-branches
-      uses: tagdots/delete-branches@1067f6cf756a462d2da56cffae2df37ea15b600e # 1.2.15
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        repo-url: ${{ github.server_url }}/${{ github.repository }}
-        max-idle-days: 10
-        exclude-branches: 'badges'
-        dry-run: false
+      - name: Run delete-branches # https://github.com/tagdots/delete-branches
+        id: delete-branches
+        uses: tagdots/delete-branches@1067f6cf756a462d2da56cffae2df37ea15b600e # 1.2.15
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          repo-url: ${{ github.server_url }}/${{ github.repository }}
+          max-idle-days: 10
+          exclude-branches: "badges"
+          dry-run: false
 
-  update-pre-commit: # https://github.com/tagdots/update-pre-commit-action
+  update-pre-commit:
     runs-on: ubuntu-latest
 
     permissions:
@@ -182,53 +197,59 @@ jobs:
       pull-requests: write
 
     steps:
-    - name: Run update-pre-commit
-      id: update-pre-commit
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      uses: tagdots/update-pre-commit-action@a80688d12cf761973e340674bcf552af366afba5 # 1.0.28
-      with:
-        file: .pre-commit-config.yaml
-        dry-run: false
-        open-pr: true
+      - name: Run update-pre-commit # https://github.com/tagdots/update-pre-commit-action
+        id: update-pre-commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: tagdots/update-pre-commit-action@a80688d12cf761973e340674bcf552af366afba5 # 1.0.28
+        with:
+          file: .pre-commit-config.yaml
+          dry-run: false
+          open-pr: true
 
   notify-slack: # https://github.com/slackapi/slack-github-action
     if: always()
-    needs: [badge-coverage, badge-marketplace, stale-workflow-runs, stale-issues-prs, stale-branches, update-pre-commit]
-
+    needs:
+      [
+        badge-coverage,
+        badge-marketplace,
+        stale-workflow-runs,
+        stale-issues-prs,
+        stale-branches,
+        update-pre-commit,
+      ]
     runs-on: ubuntu-latest
 
     outputs:
       WORKFLOW_RESULT: ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}
 
     steps:
-    - name: Get Overall Jobs Results
-      id: get-overall-jobs-results
-      shell: bash
-      run: |
-        # get overall result from all of the previous jobs
-        if "${{ needs.badge-coverage.result == 'success' && needs.badge-marketplace.result == 'success' && needs.stale-workflow-runs.result == 'success' && needs.stale-issues-prs.result == 'success' && needs.stale-branches.result == 'success' && needs.update-pre-commit.result == 'success' }}"; then
-          echo "WORKFLOW_RESULT=:white_check_mark:" >> "$GITHUB_OUTPUT"
-        else
-          echo "WORKFLOW_RESULT=:no_entry:" >> "$GITHUB_OUTPUT"
-        fi
+      - name: Get Overall Jobs Results
+        id: get-overall-jobs-results
+        shell: bash
+        run: |
+          if "${{ needs.badge-coverage.result == 'success' && needs.badge-marketplace.result == 'success' && needs.stale-workflow-runs.result == 'success' && needs.stale-issues-prs.result == 'success' && needs.stale-branches.result == 'success' && needs.update-pre-commit.result == 'success' }}"; then
+            echo "WORKFLOW_RESULT=:white_check_mark:" >> "$GITHUB_OUTPUT"
+          else
+            echo "WORKFLOW_RESULT=:no_entry:" >> "$GITHUB_OUTPUT"
+          fi
 
-    - name: Post message to Slack
-      uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
-      with:
-        method: chat.postMessage
-        token: "${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}"
-        payload: |
-          channel: "${{ secrets.SECRET_SLACK_CHANNEL_CRON_TASKS }}"
-          text: "
-              *Repository: ${{ github.repository }}*\n
-              *Workflow : ${{ github.workflow }} ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}*
-              ```
-              URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n
-              Job: badge-coverage      - ${{ needs.badge-coverage.result }}\n
-              Job: badge-marketplace   - ${{ needs.badge-marketplace.result }}\n
-              Job: stale-workflow-runs - ${{ needs.stale-workflow-runs.result }}\n
-              Job: stale-issues-prs    - ${{ needs.stale-issues-prs.result }}\n
-              Job: stale-branches      - ${{ needs.stale-branches.result }}\n
-              Job: update-pre-commit   - ${{ needs.update-pre-commit.result }}
-              ```"
+      - name: Post message to Slack
+        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
+        with:
+          method: chat.postMessage
+          token: "${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}"
+          payload: |
+            channel: "${{ secrets.SECRET_SLACK_CHANNEL_CRON_TASKS }}"
+            text: "
+                *Repository: ${{ github.repository }}*\n
+                *Workflow : ${{ github.workflow }} ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}*
+                ```
+                URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n
+                Job: badge-coverage      - ${{ needs.badge-coverage.result }}\n
+                Job: badge-marketplace   - ${{ needs.badge-marketplace.result }}\n
+                Job: stale-workflow-runs - ${{ needs.stale-workflow-runs.result }}\n
+                Job: stale-issues-prs    - ${{ needs.stale-issues-prs.result }}\n
+                Job: stale-branches      - ${{ needs.stale-branches.result }}\n
+                Job: update-pre-commit   - ${{ needs.update-pre-commit.result }}
+                ```"

@@ -1,6 +1,6 @@
 name: "Delete GitHub Workflow Runs"
 
-description: 'Delete GitHub Action workflow runs'
+description: "Delete GitHub Action workflow runs"
 
 author: tagdots
 
@@ -10,20 +10,20 @@ branding:
 
 inputs:
   dry-run:
-    description: 'Dry Run'
-    default: 'true'
+    description: "Dry Run"
+    default: "true"
     required: false
 
   min-runs:
-    description: 'Minimum number of runs to keep in each workflow'
+    description: "Minimum number of runs to keep in each workflow"
     required: false
 
   max-days:
-    description: 'Maximum number of days to keep runs in each workflow'
+    description: "Maximum number of days to keep runs in each workflow"
     required: false
 
   repo-url:
-    description: 'Repository URL'
+    description: "Repository URL"
     default: ${{ github.server_url }}/${{ github.repository }}
     required: true
 
@@ -31,65 +31,64 @@ runs:
   using: "composite"
 
   steps:
+    - name: Checkout source code # https://github.com/marketplace/actions/checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-  - name: Checkout source code
-    uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+    - name: Setup Python # https://github.com/marketplace/actions/setup-python
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
 
-  - name: Install Python
-    uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-    with:
-      python-version: '3.14.x'
+    - name: Install the latest delete-workflow-runs
+      shell: bash
+      run: python -m pip install -U delete-workflow-runs
 
-  - name: Install the latest delete-workflow-runs
-    shell: bash
-    run: python -m pip install -U delete-workflow-runs
+    - name: Run delete-workflow-runs to show version
+      shell: bash
+      run: delete-workflow-runs --version
 
-  - name: Run delete-workflow-runs to show version
-    shell: bash
-    run: delete-workflow-runs --version
+    - name: Check for mutually exclusive options
+      shell: bash
+      env:
+        INPUT_MIN_RUNS: "${{ inputs.min-runs }}"
+        INPUT_MAX_DAYS: "${{ inputs.max-days }}"
+      run: |
+        # check for mutually exclusive options
+        if [[ -n "$INPUT_MAX_DAYS" && -n "$INPUT_MIN_RUNS" ]]; then
+          echo "Error: max-days A and min-runs are mutually exclusive. Please select only one."
+          exit 1
+        fi
+        if [[ -z "$INPUT_MAX_DAYS" && -z "$INPUT_MIN_RUNS" ]]; then
+          echo "Error: At least one option (max-days or min-runs) must be selected."
+          exit 1
+        fi
 
-  - name: Check for mutually exclusive options
-    shell: bash
-    env:
-      INPUT_MIN_RUNS: "${{ inputs.min-runs }}"
-      INPUT_MAX_DAYS: "${{ inputs.max-days }}"
-    run: |
-      # check for mutually exclusive options
-      if [[ -n "$INPUT_MAX_DAYS" && -n "$INPUT_MIN_RUNS" ]]; then
-        echo "Error: max-days A and min-runs are mutually exclusive. Please select only one."
-        exit 1
-      fi
-      if [[ -z "$INPUT_MAX_DAYS" && -z "$INPUT_MIN_RUNS" ]]; then
-        echo "Error: At least one option (max-days or min-runs) must be selected."
-        exit 1
-      fi
+    - name: Run delete-workflow-runs (max-days)
+      shell: bash
+      env:
+        INPUT_DRY_RUN: "${{ inputs.dry-run }}"
+        INPUT_MAX_DAYS: "${{ inputs.max-days }}"
+        INPUT_REPO_URL: "${{ inputs.repo-url }}"
+      run: |
+        # delete-workflow-runs (max-days)
+        if [[ -n "$INPUT_MAX_DAYS" && "$INPUT_MAX_DAYS" -ge 0 ]]; then
+          COLUMNS=145 delete-workflow-runs \
+            --dry-run "$INPUT_DRY_RUN" \
+            --repo-url "$INPUT_REPO_URL" \
+            --max-days "$INPUT_MAX_DAYS"
+        fi
 
-  - name: Run delete-workflow-runs (max-days)
-    shell: bash
-    env:
-      INPUT_DRY_RUN: "${{ inputs.dry-run }}"
-      INPUT_MAX_DAYS: "${{ inputs.max-days }}"
-      INPUT_REPO_URL: "${{ inputs.repo-url }}"
-    run: |
-      # delete-workflow-runs (max-days)
-      if [[ -n "$INPUT_MAX_DAYS" && "$INPUT_MAX_DAYS" -ge 0 ]]; then
-        COLUMNS=145 delete-workflow-runs \
-          --dry-run "$INPUT_DRY_RUN" \
-          --repo-url "$INPUT_REPO_URL" \
-          --max-days "$INPUT_MAX_DAYS"
-      fi
-
-  - name: Run delete-workflow-runs (min-runs)
-    shell: bash
-    env:
-      INPUT_DRY_RUN: "${{ inputs.dry-run }}"
-      INPUT_MIN_RUNS: "${{ inputs.min-runs }}"
-      INPUT_REPO_URL: "${{ inputs.repo-url }}"
-    run: |
-      # delete-workflow-runs (min-runs)
-      if [[ -n "$INPUT_MIN_RUNS" && "$INPUT_MIN_RUNS" -ge 0 ]]; then
-        COLUMNS=145 delete-workflow-runs \
-          --dry-run "$INPUT_DRY_RUN" \
-          --repo-url "$INPUT_REPO_URL" \
-          --min-runs "$INPUT_MIN_RUNS"
-      fi
+    - name: Run delete-workflow-runs (min-runs)
+      shell: bash
+      env:
+        INPUT_DRY_RUN: "${{ inputs.dry-run }}"
+        INPUT_MIN_RUNS: "${{ inputs.min-runs }}"
+        INPUT_REPO_URL: "${{ inputs.repo-url }}"
+      run: |
+        # delete-workflow-runs (min-runs)
+        if [[ -n "$INPUT_MIN_RUNS" && "$INPUT_MIN_RUNS" -ge 0 ]]; then
+          COLUMNS=145 delete-workflow-runs \
+            --dry-run "$INPUT_DRY_RUN" \
+            --repo-url "$INPUT_REPO_URL" \
+            --min-runs "$INPUT_MIN_RUNS"
+        fi
