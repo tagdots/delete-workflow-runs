@@ -1,8 +1,7 @@
 ---
-
 name: re-build-test
 
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   workflow_call:
     outputs:
       ARTIFACT_ID:
@@ -16,12 +15,16 @@ on:  # yamllint disable-line rule:truthy
 
   workflow_dispatch:
 
+env:
+  PACKAGE_NAME: delete_workflow_runs
+  PYTHON_VERSION: "3.14.x"
+  UV_VERSION: "0.12.3"
+
 permissions:
   contents: read
   pull-requests: read
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
 
@@ -30,109 +33,110 @@ jobs:
       BUILD_VERSION: ${{ steps.set-build-version.outputs.BUILD_VERSION }}
       WORKFLOW_RUN_ID: ${{ steps.set-workflow-runid.outputs.WORKFLOW_RUN_ID }}
 
-    strategy:
-      fail-fast: false
-      matrix:
-        python: ['3.12.12', '3.13.9', '3.14.x']
-
     steps:
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Checkout source code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Setup Python # https://github.com/marketplace/actions/setup-python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Setup Python ${{ matrix.python }}
-      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-      with:
-        python-version: ${{ matrix.python }}
+      - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: "true"
 
-    - name: Make build
-      run: make build
+      - name: Make build
+        shell: bash
+        run: make build
 
-    # set and get build version
-    - name: Set Build Version
-      id: set-build-version
-      run: |
-        echo "BUILD_VERSION=$(python src/*/run.py --version | head -1 | awk '{print $3}')" >> "$GITHUB_OUTPUT"
+      - name: Install packages
+        shell: bash
+        run: uv sync
 
-    - name: Get Build Version
-      id: get-build-version
-      run: |
-        echo "Build Version: ${{ steps.set-build-version.outputs.BUILD_VERSION }}"
+      - name: Set build version
+        id: set-build-version
+        shell: bash
+        run: |
+          echo "BUILD_VERSION=$(uv run python -c "from ${{ env.PACKAGE_NAME }} import __version__; print(__version__)")" >> "$GITHUB_OUTPUT"
 
-    # set and get artifacts
-    - name: Upload distributions
-      id: upload-distributions
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
-      with:
-        name: distributions-${{ matrix.python }}
-        path: dist/
-        if-no-files-found: error
-        retention-days: 3
-        overwrite: true
-        compression-level: 6
+      - name: Get build version
+        id: get-build-version
+        shell: bash
+        run: |
+          echo "Build Version: ${{ steps.set-build-version.outputs.BUILD_VERSION }}"
 
-    - name: Set Artifact ID
-      id: set-artifact-id
-      run: |
-        echo "ARTIFACT_ID=${{ steps.upload-distributions.outputs.artifact-id }}" >> "$GITHUB_OUTPUT"
+      - name: Upload distributions # https://github.com/marketplace/actions/upload-artifact
+        if: ${{ !env.ACT }}
+        id: upload-distributions
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
+        with:
+          name: distributions-${{ env.PYTHON_VERSION }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 3
+          overwrite: true
+          compression-level: 6
 
-    - shell: bash
-      run: |
-        # output artifact id
-        echo "ARTIFACT_ID: ${{ steps.upload-distributions.outputs.artifact-id }}"
+      - name: Set output artifact ID
+        if: ${{ !env.ACT }}
+        id: set-artifact-id
+        shell: bash
+        run: |
+          echo "ARTIFACT_ID=${{ steps.upload-distributions.outputs.artifact-id }}" >> "$GITHUB_OUTPUT"
+          echo "ARTIFACT_ID: ${{ steps.upload-distributions.outputs.artifact-id }}"
 
-    - name: Set Workflow Run ID
-      id: set-workflow-runid
-      run: |
-        echo "WORKFLOW_RUN_ID=${{ github.run_id }}" >> "$GITHUB_OUTPUT"
-
-    - shell: bash
-      run: |
-        # output workflow run-id
-        echo "Workflow Run ID: ${{ github.run_id }}"
+      - name: Set output workflow run ID
+        if: ${{ !env.ACT }}
+        id: set-workflow-runid
+        shell: bash
+        run: |
+          echo "WORKFLOW_RUN_ID=${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+          echo "Workflow Run ID: ${{ github.run_id }}"
 
   test:
+    needs: build
+    runs-on: ubuntu-latest
 
     permissions:
       contents: write
       pull-requests: write
 
-    needs: build
-
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        python: ['3.12.12', '3.13.9', '3.14.x']
-
     steps:
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Checkout source code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Setup Python # https://github.com/marketplace/actions/setup-python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Setup Python ${{ matrix.python }}
-      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-      with:
-        python-version: ${{ matrix.python }}
+      - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: "true"
 
-    - name: Install test dependencies
-      run: make test-install
+      - name: Install test dependencies
+        shell: bash
+        run: make test-only
 
-    - name: Make Test
-      run: make test
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        PYTHONUNBUFFERED: "1"
+      - name: Make test
+        shell: bash
+        run: make test
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONUNBUFFERED: "1"
 
-    - name: Upload Coverage
-      if: always()
-      id: upload-coverage
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
-      with:
-        name: coverage-${{ matrix.python }}
-        path: htmlcov/
-        if-no-files-found: error
-        retention-days: 3
-        overwrite: true
-        compression-level: 6
+      - name: Upload coverage # https://github.com/marketplace/actions/upload-artifact
+        if: ${{ !env.ACT }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
+        with:
+          name: coverage-result
+          path: htmlcov/
+          if-no-files-found: error
+          retention-days: 3
+          overwrite: true
+          compression-level: 6

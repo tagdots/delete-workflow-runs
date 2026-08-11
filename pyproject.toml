@@ -1,6 +1,6 @@
 [build-system]
-build-backend = "setuptools.build_meta"
-requires = [ "setuptools" ]
+build-backend = "hatchling.build"
+requires = [ "hatchling" ]
 
 [project]
 name = "delete-workflow-runs"
@@ -20,54 +20,68 @@ classifiers = [
   "Topic :: Software Development :: Build Tools",
 ]
 dependencies = [
-  "click==8.4.2",
-  "pandas==3.0.5",
-  "pygithub==2.9.1",
-  "rich==15.0.0",
-]
-optional-dependencies.local = [
-  "commitizen",
-  "pre-commit",
-]
-optional-dependencies.test = [
-  "build",
-  "coverage",
-  "flake8",
-  "isort",
-  "pyscan-rs",
-  "pytest",
-  "twine",
+  "click~=8.4.2",
+  "pandas~=3.0.5",
+  "pygithub~=2.9.1",
+  "rich~=15.0.0",
 ]
 urls.Changelog = "https://github.com/tagdots/delete-workflow-runs/blob/main/CHANGELOG.md"
 urls.Documentation = "https://github.com/tagdots/delete-workflow-runs/blob/main/README.md"
 urls.Homepage = "https://github.com/tagdots"
 urls.Issues = "https://github.com/tagdots/delete-workflow-runs/issues"
 urls.Repository = "https://github.com/tagdots/delete-workflow-runs"
-scripts.delete-workflow-runs = "delete_workflow_runs.run:main"
+scripts.delete-workflow-runs = "delete_workflow_runs.cli:main"
 
 [dependency-groups]
+dev = [
+  "commitizen",
+  "pre-commit",
+]
 test = [
-  "coverage[toml]",
+  "coverage",
+  "pytest",
+]
+security = [
+  "bandit",
+  "pysentry-rs",
 ]
 
-[tool.setuptools]
-packages.find.where = [ "src" ]
-dynamic.version = { attr = "src.delete_workflow_runs.__init__" }
+[tool.hatch]
+version.path = "src/delete_workflow_runs/__init__.py"
+metadata.directory = "src"
+build.targets.wheel.packages = [ "src/delete_workflow_runs" ]
+
+[tool.black]
+line-length = 125
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 4
+combine_as_imports = true
+float_to_top = true
+skip = [ "__init__.py" ]
+
+[tool.flake8]
+max-line-length = 125
+max-complexity = 15
 
 [tool.pyproject-fmt]
 column_width = 125
 indent = 2
 keep_full_version = true
 
+[tool.pyright]
+venv = ".venv"
+venvPath = "."
+
 [tool.coverage]
 run.branch = true
-run.command_line = "-m pytest -vs tests/"
-run.include = [ "src/delete_workflow_runs/*" ]
 run.omit = [ "tests/*" ]
+run.source = [ "src/delete_workflow_runs" ]
 report.fail_under = 80
-report.include = [ "src/delete_workflow_runs/*" ]
 report.show_missing = false
-source = [ "." ]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
@@ -79,3 +93,4 @@ version_files = [
 major_version_zero = false
 tag_format = "$version"
 update_changelog_on_bump = true
+pre_bump_hooks = [ "uv lock" ]

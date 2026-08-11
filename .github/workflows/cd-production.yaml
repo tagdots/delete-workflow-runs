@@ -1,114 +1,115 @@
 ---
-
 name: CD-production
 
-on:  # yamllint disable-line rule:truthy
-
+on: # yamllint disable-line rule:truthy
   release:
-
     types:
       - published
 
 env:
-  PACKAGE_NAME: delete-workflow-runs
-  PYTHON_VERSION: '3.14.x'
+  PROJECT_NAME: delete-workflow-runs
+  PACKAGE_NAME: delete_workflow_runs
+  PYTHON_VERSION: "3.14.x"
+  UV_VERSION: "0.12.3"
 
 permissions:
   contents: read
 
 jobs:
-
   publish-PyPI:
-
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Checkout source code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Setup Python # https://github.com/marketplace/actions/setup-python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
 
-    - shell: bash
-      run: |
-        # install dependencies and build
-        make test-install
-        make build
+      - name: Make build
+        shell: bash
+        run: make build
 
-    # https://github.com/marketplace/actions/pypi-publish
-    - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
-      with:
-        attestations: false
-        packages-dir: dist/
-        password: ${{ secrets.SECRET_PYPI }}
-        print-hash: true
-        repository-url: https://upload.pypi.org/legacy/
-        verbose: true
-        verify-metadata: true
+      - name: Publish package distributions to PyPI # https://github.com/marketplace/actions/pypi-publish
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          attestations: false
+          packages-dir: dist/
+          password: ${{ secrets.SECRET_PYPI }}
+          print-hash: true
+          repository-url: https://upload.pypi.org/legacy/
+          verbose: true
+          verify-metadata: true
 
   validate-PyPI:
-
     needs: [publish-PyPI]
-
     runs-on: ubuntu-latest
 
     steps:
+      - name: Validate after short wait to ensure publish is complete
+        shell: bash
+        run: sleep 15
 
-    - name: Validate after short wait to ensure publish is complete
-      shell: bash
-      run: sleep 15
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Checkout source code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Setup Python # https://github.com/marketplace/actions/setup-python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: "true"
 
-    - shell: bash
-      env:
-        INDEX_URL: "https://pypi.org/simple/"
-      run: |
-        # install package from PyPI and run app to show version
-        python -m pip install ${{ env.PACKAGE_NAME }}==${{ github.ref_name }}
-        ${{ env.PACKAGE_NAME }} --version
+      - name: Install main project packages
+        shell: bash
+        run: uv sync
+
+      - name: Install package from PyPI and run app to show version
+        shell: bash
+        env:
+          INDEX_URL: "https://pypi.org/simple/"
+        run: |
+          uv run pip install ${{ env.PROJECT_NAME }}==${{ github.ref_name }}
+          ${{ env.PROJECT_NAME }} --version
 
   notify-slack:
     if: always()
-
     needs: [publish-PyPI, validate-PyPI]
-
     runs-on: ubuntu-latest
 
     outputs:
       WORKFLOW_RESULT: ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}
 
     steps:
+      - name: Get overall jobs results
+        id: get-overall-jobs-results
+        shell: bash
+        run: |
+          if "${{ needs.publish-PyPI.result == 'success' && needs.validate-PyPI.result == 'success' }}"; then
+            echo "WORKFLOW_RESULT=:white_check_mark:" >> "$GITHUB_OUTPUT"
+          else
+            echo "WORKFLOW_RESULT=:no_entry:" >> "$GITHUB_OUTPUT"
+          fi
 
-    - name: Get Overall Jobs Results
-      id: get-overall-jobs-results
-      shell: bash
-      run: |
-        # get overall result from all of the previous jobs
-        if "${{ needs.publish-PyPI.result == 'success' && needs.validate-PyPI.result == 'success' }}"; then
-          echo "WORKFLOW_RESULT=:white_check_mark:" >> "$GITHUB_OUTPUT"
-        else
-          echo "WORKFLOW_RESULT=:no_entry:" >> "$GITHUB_OUTPUT"
-        fi
-
-    - name: Post message to Slack
-      uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
-      with:
-        method: chat.postMessage
-        token: "${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}"
-        payload: |
-          channel: "${{ secrets.SECRET_SLACK_CHANNEL_CICD }}"
-          text: "
+      - name: Post message to Slack # https://github.com/marketplace/actions/slack-github-action
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        with:
+          method: chat.postMessage
+          token: "${{ secrets.SECRET_SLACK_APP_GITHUB_BOT }}"
+          payload: |
+            channel: "${{ secrets.SECRET_SLACK_CHANNEL_CICD }}"
+            text: "
               *Repository: ${{ github.repository }}*\n
               *Workflow : ${{ github.workflow }} ${{ steps.get-overall-jobs-results.outputs.WORKFLOW_RESULT }}*\n
               *Tag Name : ${{ github.ref_name }}*
