@@ -1,9 +1,10 @@
 ---
 # NOTE: Terraform-managed template
+
 # https://devtodevops.com/hadolint-dockerfile/
 
-failure-threshold: error  # error, warning, info, style, ignore, none
-format: tty  # tty, json, checkstyle, codeclimate, gitlab_codeclimate
+failure-threshold: error # error, warning, info, style, ignore, none
+format: tty # tty, json, checkstyle, codeclimate, gitlab_codeclimate
 no-color: false
 no-fail: false
 strict-labels: false
@@ -11,4 +12,5 @@ verbose: false
 ignored:
   - DL3008 # pin version: apt install
   - DL3013 # pin version: pip install
+  - DL3025 # use exec (JSON) form for CMD or ENTRYPOINT arguments
   - SC1091 # shellcheck source
