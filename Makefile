@@ -4,57 +4,46 @@ usage:
 	@echo "usage:"
 	@echo "\tmake build"
 	@echo "\tmake test"
-	@echo "\tmake test-install"
-	@echo "\tmake local-install"
+	@echo "\tmake test-only"
+	@echo "\tmake test-plus"
+	@echo "\tmake local-dev"
 
 build:
 	@echo "***************************************************************************"
-	@echo "*** Upgrade to the latest python build"
+	@echo "*** uv build"
 	@echo "***************************************************************************"
-	python -m pip install -U uv
-	python -m uv pip install -U pip
-	python -m uv pip install -U build
-
-	@echo "\n"
-	@echo "***************************************************************************"
-	@echo "*** Build software package"
-	@echo "***************************************************************************"
-	PYTHONWARNINGS=error python -m build
-
-	@echo "\n"
-	@echo "***************************************************************************"
-	@echo "*** Install package into the current active Python environment"
-	@echo "***************************************************************************"
-	python -m uv pip install -e .
+	PYTHONWARNINGS=error uv build
 
 test:
 	@echo "***************************************************************************"
-	@echo "*** Running coverage tests"
+	@echo "*** Running coverage tests and collect the coverage data"
 	@echo "***************************************************************************"
-	coverage run
+	uv run coverage run -m pytest -vs
 
 	@echo "\n"
 	@echo "## Create an HTML report of the coverage of the files"
-	coverage html
+	uv run coverage html
 
 	@echo "\n"
 	@echo "## Report coverage statistics on modules"
-	coverage report
+	uv run coverage report -m
 
-test-install:
+test-only:
 	@echo "***************************************************************************"
-	@echo "*** Install test dependencies into current active Python env"
+	@echo "*** Install test dependency-group ONLY"
 	@echo "***************************************************************************"
-	python -m pip install -U uv
-	python -m uv pip install -U pip
-	python -m uv pip install -e .[test]
+	uv sync --only-group test
 
-local-install:
+test-plus:
 	@echo "***************************************************************************"
-	@echo "*** Install local dependencies into current active Python env"
+	@echo "*** Append dependency-groups for CICD"
 	@echo "***************************************************************************"
-	python -m pip install -U uv
-	python -m uv pip install -U pip
-	python -m uv pip install -e .[local,test]
+	uv sync --only-group test --only-group security
 
-.PHONY: help build test test-install
+local-dev:
+	@echo "***************************************************************************"
+	@echo "*** Install all dependencies"
+	@echo "***************************************************************************"
+	uv sync --all-groups
+
+.PHONY: help build test local-dev test-only test-plus
