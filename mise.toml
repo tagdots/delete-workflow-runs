@@ -1,0 +1,15 @@
+[tools]
+uv = "0.12.0"
+
+[env]
+# Instructs mise to auto-create and auto-activate the virtual environment
+_.python.venv = { path = ".venv", create = true, uv_create_args = ["--seed"] }
+
+[tasks.install_deps]
+description = "Instantly sync pyproject.toml dependencies via uv"
+run = "uv sync"
+hide = true
+
+[hooks]
+# This tells mise to execute the task the moment you enter the folder
+enter = { task = "install_deps" }
