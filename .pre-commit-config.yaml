@@ -1,96 +1,92 @@
 repos:
-  - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.4
-    hooks:
-      - name: Check GitHub Actions Workflows
-        id: check-github-workflows
-        args:
-          - --verbose
-  - repo: https://github.com/hadolint/hadolint
-    rev: v2.15.1
-    hooks:
-      - name: Check Dockerfile
-        id: hadolint
-        args:
-          - --config
-          - .github/config/hadolint-cfg.yaml
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.38.0
-    hooks:
-      - name: Check Yaml to verify syntax and more
-        id: yamllint
-        args:
-          - --no-warnings
-          - -c=.github/config/yamllint-cfg.yaml
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
-    hooks:
-      - name: Check TOML to verify syntax
-        id: check-toml
-      - name: Check JSON to verify syntax
-        id: check-json
-        types:
-          - json
-      - name: Check JSON pretty-format
-        id: pretty-format-json
-        args:
-          - --no-sort-keys
-      - name: Check added large files
-        id: check-added-large-files
-        args:
-          - --maxkb=2000
-      - name: Check file parse as valid python
-        id: check-ast
-      - name: Fix newline at end of file
-        id: end-of-file-fixer
-        exclude: ^tests/|^.gitignore$|^LICENSE$
-      - name: Fix to trim whitespace from ends of lines
-        id: trailing-whitespace
-        exclude: ^tests/|^.gitignore$
-  - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.27.0
-    hooks:
-      - name: Python pyproject.toml format - standard configuration file for Python projects
-        id: pyproject-fmt
-  - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 26.5.1
-    hooks:
-      - name: Python black - format codes
-        id: black
-        args:
-          - -t
-          - py312
-          - -t
-          - py313
-          - -t
-          - py314
-          - --line-length
-          - "125"
-  - repo: https://github.com/pycqa/isort
-    rev: 8.0.1
-    hooks:
-      - name: Python isort - sorts & groups standard library, third-party, and local
-        id: isort
-        args:
-          - --profile
-          - black
-          - --combine-as
-          - --float-to-top
-          - --trailing-comma
-          - --multi-line
-          - "3"
-          - --force-grid-wrap
-          - "4"
-          - --skip
-          - "__init__.py"
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.3.0
-    hooks:
-      - name: Python flake8 - flag syntax errors, style violations
-        id: flake8
-        additional_dependencies: [flake8-pyproject]
-  # - repo: https://github.com/RobertCraigie/pyright-python
-  #   rev: v1.1.411
-  #   hooks:
-  #     - name: Python pyright - type checking
-  #       id: pyright
+- repo: https://github.com/python-jsonschema/check-jsonschema
+  rev: 0.38.0
+  hooks:
+  - name: Check GitHub Actions Workflows
+    id: check-github-workflows
+    args:
+    - --verbose
+- repo: https://github.com/hadolint/hadolint
+  rev: v2.15.1
+  hooks:
+  - name: Check Dockerfile
+    id: hadolint
+    args:
+    - --config
+    - .github/config/hadolint-cfg.yaml
+- repo: https://github.com/adrienverge/yamllint
+  rev: v1.38.0
+  hooks:
+  - name: Check Yaml to verify syntax and more
+    id: yamllint
+    args:
+    - --no-warnings
+    - -c=.github/config/yamllint-cfg.yaml
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0
+  hooks:
+  - name: Check TOML to verify syntax
+    id: check-toml
+  - name: Check JSON to verify syntax
+    id: check-json
+    types:
+    - json
+  - name: Check JSON pretty-format
+    id: pretty-format-json
+    args:
+    - --no-sort-keys
+  - name: Check added large files
+    id: check-added-large-files
+    args:
+    - --maxkb=2000
+  - name: Check file parse as valid python
+    id: check-ast
+  - name: Fix newline at end of file
+    id: end-of-file-fixer
+    exclude: ^tests/|^.gitignore$|^LICENSE$
+  - name: Fix to trim whitespace from ends of lines
+    id: trailing-whitespace
+    exclude: ^tests/|^.gitignore$
+- repo: https://github.com/tox-dev/pyproject-fmt
+  rev: v2.27.1
+  hooks:
+  - name: Python pyproject.toml format - standard configuration file for Python projects
+    id: pyproject-fmt
+- repo: https://github.com/psf/black-pre-commit-mirror
+  rev: 26.5.1
+  hooks:
+  - name: Python black - format codes
+    id: black
+    args:
+    - -t
+    - py312
+    - -t
+    - py313
+    - -t
+    - py314
+    - --line-length
+    - '125'
+- repo: https://github.com/pycqa/isort
+  rev: 8.0.1
+  hooks:
+  - name: Python isort - sorts & groups standard library, third-party, and local
+    id: isort
+    args:
+    - --profile
+    - black
+    - --combine-as
+    - --float-to-top
+    - --trailing-comma
+    - --multi-line
+    - '3'
+    - --force-grid-wrap
+    - '4'
+    - --skip
+    - __init__.py
+- repo: https://github.com/pycqa/flake8
+  rev: 7.3.0
+  hooks:
+  - name: Python flake8 - flag syntax errors, style violations
+    id: flake8
+    additional_dependencies:
+    - flake8-pyproject
