@@ -8,6 +8,7 @@
 <br>
 
 ## ✅ What does delete-workflow-runs do?
+
 **delete-workflow-runs** deletes workflow runs in GitHub repository.
 
 <br>
@@ -22,6 +23,7 @@
 -->
 
 ## ⭐ Why switch to delete-workflow-runs?
+
 - we reduce your supply chain risks with [openssf best practices](https://best.openssf.org) in our SDLC and operations.
 - we identify orphan workflow runs that should be deleted when the parent workflow is deleted.
 - we produce _API rate limit consumption estimate in dry-run_, so you can plan your delete task properly.
@@ -37,14 +39,16 @@ Use the workflow examples below to create your own workflow inside `.github/work
 <br>
 
 ### Example 1 - Summary (MOCK Delete)
-| Input | Workflow Spec | Result
-|-------|-------------|----------|
-| `scheduled run` | `- cron: '30 17 * * *'` | Run daily at 5:30 pm UTC
-| `github token permissions` | `actions: read`<br>`contents: read` | MOCK delete requires read permission |
-| `min-runs` | `10` | Keep the last 10 workflow runs for each workflow |
-| `dry-run` | `true` | a. MOCK delete<br>b. Produce API rate limit consumption estimate<br>c. Get the JSON log file  |
+
+| Input                      | Workflow Spec                       | Result                                                                                       |
+| -------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------- |
+| `scheduled run`            | `- cron: '30 17 * * *'`             | Run daily at 5:30 pm UTC                                                                     |
+| `github token permissions` | `actions: read`<br>`contents: read` | MOCK delete requires read permission                                                         |
+| `min-runs`                 | `10`                                | Keep the last 10 workflow runs for each workflow                                             |
+| `dry-run`                  | `true`                              | a. MOCK delete<br>b. Produce API rate limit consumption estimate<br>c. Get the JSON log file |
 
 ### Example 1 - Workflow (MOCK Delete)
+
 ```yml
 name: delete-github-workflow-runs
 
@@ -96,14 +100,15 @@ Get the data output (data_dict.log) and extrat fields if necessary to:
 
 ### Example 2 - Summary (Permanent delete)
 
-| Input | Workflow Spec | Result
-|-------|-------------|----------|
-| `scheduled run` | `- cron: '30 17 * * *'` | Run daily at 5:30 pm UTC
-| `github token permissions` | `actions: write`<br>`contents: read` | Delete requires write permission in `actions` |
-| `max-days` | `10` | Keep runs in the last 10 days for each workflow |
-| `dry-run` | `false` | a. Delete workflow runs<br>b. Get the JSON log file |
+| Input                      | Workflow Spec                        | Result                                              |
+| -------------------------- | ------------------------------------ | --------------------------------------------------- |
+| `scheduled run`            | `- cron: '30 17 * * *'`              | Run daily at 5:30 pm UTC                            |
+| `github token permissions` | `actions: write`<br>`contents: read` | Delete requires write permission in `actions`       |
+| `max-days`                 | `10`                                 | Keep runs in the last 10 days for each workflow     |
+| `dry-run`                  | `false`                              | a. Delete workflow runs<br>b. Get the JSON log file |
 
 ### Example 2 - Workflow (Permanent delete)
+
 ```yml
 name: delete-github-workflow-runs
 
@@ -145,6 +150,7 @@ jobs:
 ## 🖥 Running _delete-workflow-runs_ from command line
 
 ### Prerequisites
+
 ```
 * Python (3.12+)
 * GitHub fine-grained token (actions: write, contents: read)
@@ -153,6 +159,7 @@ jobs:
 <br>
 
 ### Setup _delete-workflow-runs_
+
 ```
 ~/work/test $ workon test
 (test) ~/work/test $ export GH_TOKEN=github_pat_xxxxxxxxxxxxx
@@ -162,6 +169,7 @@ jobs:
 <br>
 
 ### Example 1 - Run for help
+
 ```
 (test) ~/work/test $ delete-workflow-runs --help
 Usage: delete-workflow-runs [OPTIONS]
@@ -301,16 +309,17 @@ API rate limit Reset At : 2025-08-07 22:46:47+00:00 (UTC)
 
 ## 🔧 delete-workflow-runs command line options
 
-| Input | Description | Default | Required | Notes |
-|-------|-------------|----------|----------|----------|
-| `repo-url` | Repository URL | `None` | Yes | e.g. https://github.com/{owner}/{repo} |
-| `dry-run` | Dry-Run | `True` | No | - |
-| `min-runs` | Min. no. of runs to <br>keep in a workflow | `None` | No | enter either min. runs or max. days |
-| `max-days` | Max. no. of days to <br>keep run in a workflow | `None` | No | enter either min. runs or max. days |
+| Input      | Description                                    | Default | Required | Notes                                  |
+| ---------- | ---------------------------------------------- | ------- | -------- | -------------------------------------- |
+| `repo-url` | Repository URL                                 | `None`  | Yes      | e.g. https://github.com/{owner}/{repo} |
+| `dry-run`  | Dry-Run                                        | `True`  | No       | -                                      |
+| `min-runs` | Min. no. of runs to <br>keep in a workflow     | `None`  | No       | enter either min. runs or max. days    |
+| `max-days` | Max. no. of days to <br>keep run in a workflow | `None`  | No       | enter either min. runs or max. days    |
 
 <br>
 
 ## ⚠️ Summary of GitHub rate limit for standard repository
+
 ```
 * 1,000 requests per hour per repository.
 * No more than 100 concurrent requests are allowed.
@@ -322,21 +331,22 @@ API rate limit Reset At : 2025-08-07 22:46:47+00:00 (UTC)
 <br>
 
 ## ✍️ Notes
-1. We don't present the starting and ending numbers of the API rate limit.  Based on our pioneer user feedbacks, other tasks could be running and consuming the API rate limit in parallel, which renders the numbers with mixed results.
 
-1. We take a conservative approach and use only one worker thread, adding a 0.5-second delay after each delete to protect you from rate limit issues.  In the screenshot below, we used 16.5 minutes to delete 626 active workflow runs.  If not for the rate limit concern, we could have got it down to less than 5 minutes.
+1. We don't present the starting and ending numbers of the API rate limit. Based on our pioneer user feedbacks, other tasks could be running and consuming the API rate limit in parallel, which renders the numbers with mixed results.
+
+1. We take a conservative approach and use only one worker thread, adding a 0.5-second delay after each delete to protect you from rate limit issues. In the screenshot below, we used 16.5 minutes to delete 626 active workflow runs. If not for the rate limit concern, we could have got it down to less than 5 minutes.
 
 ![delete-02](https://raw.githubusercontent.com/tagdots/delete-workflow-runs/refs/heads/main/assets/delete-workflow-runs-02.png)
 
 <br>
 
-## 😕  Troubleshooting
+## 😕 Troubleshooting
 
 Open an [issue][issues]
 
 <br>
 
-## 🙏  Contributing
+## 🙏 Contributing
 
 For pull requests to be accepted on this project, you should follow [PEP8][pep8] when creating/updating Python codes.
 
@@ -345,7 +355,8 @@ See [Contributing][contributing]
 <br>
 
 ## 🙌 Appreciation
-If you find this project helpful, please ⭐ star it.  **Thank you**.
+
+If you find this project helpful, please ⭐ star it. **Thank you**.
 
 <br>
 
