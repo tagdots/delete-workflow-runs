@@ -1,0 +1,86 @@
+---
+name: re-pre-commit
+
+on: # yamllint disable-line rule:truthy
+  workflow_call:
+
+  workflow_dispatch:
+
+env:
+  HADOLINT_VERSION: "v2.15.1"
+  PYTHON_VERSION: "3.14.x"
+  TERRAFORM_VERSION: "1.15.x"
+
+permissions:
+  contents: read
+
+jobs:
+  default-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Python # https://github.com/marketplace/actions/setup-python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install hadolint
+        shell: bash
+        run: |
+          wget -O hadolint https://github.com/hadolint/hadolint/releases/download/${{ env.HADOLINT_VERSION }}/hadolint-Linux-x86_64
+          chmod +x hadolint
+          sudo mv hadolint /usr/bin/
+          hadolint --version
+
+      - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: "true"
+
+      - name: Install test dependency-groups
+        shell: bash
+        run: make test-plus
+
+      - name: Run pre-commit on everything
+        shell: bash
+        run: uv run pre-commit run -a -v
+
+      - name: Run Bandit (analyze code's Abstract Syntax Tree (AST) to identify common security vulnerabilities)
+        shell: bash
+        run: |
+          uv run bandit -iii -lll -q  -r src -f custom --msg-template "{abspath}:{line}: {test_id}[bandit]: {severity}: {msg}"
+
+      - name: Run Pysentry (dependency vulnerability scanner)
+        shell: bash
+        run: uv run pysentry-rs --fail-on high --exclude-extra --no-fail-on-unknown --forbid-quarantined
+
+  add-on-checkov:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run checkov # https://github.com/marketplace/actions/checkov-github-action
+        id: checkov
+        uses: bridgecrewio/checkov-action@9b70310bcd306d11740313070b940167d6b23085 # v12.3115.0
+        with:
+          log_level: WARNING
+          quiet: false
+          skip_results_upload: "true"
+          enable_secrets_scan_all_files: "true"
+          skip_check: CKV_GIT_1,CKV_GIT_3,CKV_GIT_5,CKV_GIT_6,CKV2_GIT_1,CKV2_GHA_1,CKV_DOCKER_2,CKV_DOCKER_3
+          # Skip Check Details
+          # ID           Description
+          # CKV_GIT_1    - Ensure GitHub repository is Private
+          # CKV_GIT_3    - Ensure GitHub Repository defined in Terraform have vulnerability alerts enabled
+          # CKV_GIT_5    - Ensure GitHub pull requests should require at least 2 approvals
+          # CKV_GIT_6    - Ensure GitHub branch protection rules requires signed commits
+          # CKV2_GIT_1   - Ensure each Repository has branch protection associated
+          # CKV2_GHA_1   - Ensure top-level permissions are not set to write-all
+          # CKV_DOCKER_2 - Ensure that HEALTHCHECK instructions have been added to container images
+          # CKV_DOCKER_3 - Ensure that a user for the container has been created
