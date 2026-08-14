@@ -402,7 +402,7 @@ wheels = [
 
 [[package]]
 name = "delete-workflow-runs"
-version = "1.2.33"
+version = "1.2.34"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
