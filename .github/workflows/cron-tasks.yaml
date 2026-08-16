@@ -143,7 +143,7 @@ jobs:
     steps:
       - name: Run delete-branches # https://github.com/tagdots/delete-branches
         id: delete-branches
-        uses: tagdots/delete-branches@1067f6cf756a462d2da56cffae2df37ea15b600e # 1.2.15
+        uses: tagdots/delete-branches@7ab458c4f92b1dcd058cce7ebd57bb88ec6d21ab # 1.2.16
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
