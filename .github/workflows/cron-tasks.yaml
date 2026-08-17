@@ -86,7 +86,7 @@ jobs:
         uses: tagdots/setup-badge-action@294661aa1f149b59dfe1cd187539eca7f8f0fabf # 1.0.18
         with:
           badge-name: coverage
-          badge-url: https://github.com/tagdots/delete-workflow-runs/actions/workflows/cron-tasks.yaml
+          badge-url: https://github.com/${{ github.repository }}/actions/workflows/cron-tasks.yaml
           label: "Code Coverage"
           message: "${{ needs.pre-badge-coverage.outputs.COV_PER }}"
 
