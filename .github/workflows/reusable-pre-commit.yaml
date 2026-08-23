@@ -36,7 +36,7 @@ jobs:
           hadolint --version
 
       - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
-        uses: astral-sh/setup-uv@ae62891fec2bb8e7d6c99fc78c9fec3a63790f8d # v10.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: "true"
@@ -67,7 +67,7 @@ jobs:
 
       - name: Run checkov # https://github.com/marketplace/actions/checkov-github-action
         id: checkov
-        uses: bridgecrewio/checkov-action@1246d92f57abae29d5db5f9aeeed2a9813e52d7d # v12.3117.0
+        uses: bridgecrewio/checkov-action@59b9d7edfcad5b87fbe3f473a9a134a721ad03f8 # v12.3119.0
         with:
           log_level: WARNING
           quiet: false

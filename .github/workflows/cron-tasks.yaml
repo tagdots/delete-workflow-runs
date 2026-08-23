@@ -38,7 +38,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
-        uses: astral-sh/setup-uv@ae62891fec2bb8e7d6c99fc78c9fec3a63790f8d # v10.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: "true"
@@ -100,7 +100,7 @@ jobs:
     steps:
       - name: Run delete-workflow-runs # https://github.com/tagdots/delete-workflow-runs
         id: delete-workflow-runs
-        uses: tagdots/delete-workflow-runs@4303b7da352de2004b0c5f118420cf9f1d63a370 # 1.2.33
+        uses: tagdots/delete-workflow-runs@f2c8c90686b3cca383d91ff02dd97e4b7f052529 # 1.2.34
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
