@@ -51,6 +51,9 @@ version.path = "src/delete_workflow_runs/__init__.py"
 metadata.directory = "src"
 build.targets.wheel.packages = [ "src/delete_workflow_runs" ]
 
+[tool.uv]
+default-groups = [ "dev", "test" ]
+
 [tool.black]
 line-length = 125
 
@@ -77,14 +80,14 @@ venv = ".venv"
 venvPath = "."
 
 [tool.coverage]
-run.branch = true
-run.omit = [ "tests/*" ]
 run.source = [ "src/delete_workflow_runs" ]
+run.omit = [ "tests/*" ]
+run.branch = true
 report.fail_under = 80
 report.show_missing = false
 
 [tool.commitizen]
-name = "cz_conventional_commits"
+name = "cz_customize"
 version_scheme = "pep440"
 version_provider = "pep621"
 version_files = [
@@ -94,3 +97,39 @@ major_version_zero = false
 tag_format = "$version"
 update_changelog_on_bump = true
 pre_bump_hooks = [ "uv lock" ]
+#
+# BUMP SETTINGS (Required so "cz bump" knows how to increment versions)
+customize.bump_map = { "BREAKING CHANGE" = "MAJOR", feat = "MINOR", fix = "PATCH", bugfix = "PATCH", hotfix = "PATCH", perf = "PATCH", refactor = "PATCH", dep = "PATCH" }
+customize.bump_pattern = "^(BREAKING[\\-\\ ]CHANGE|feat|fix|bugfix|hotfix|perf|refactor|dep)"
+#
+# CHANGELOG SETTINGS (Your specific grouping logic)
+customize.change_type_map = { feat = "New Features", perf = "Change Features", refactor = "Change Features", fix = "Fixes", bugfix = "Fixes", hotfix = "Fixes", dep = "Maintenance", build = "Others", ci = "Others", docs = "Others", style = "Others", test = "Others" }
+customize.change_type_order = [ "BREAKING CHANGE", "New Features", "Change Features", "Fixes", "Maintenance", "Others" ]
+customize.changelog_pattern = "^(BREAKING[\\-\\ ]CHANGE|feat|perf|refactor|fix|bugfix|hotfix|dep|build|ci|docs|style|test)"
+#
+# MESSAGE TEMPLATE (How the wizard formats your final commit message)
+customize.message_template = "{{prefix}}{% if scope %}({{scope}}){% endif %}: {{subject}}\n\n{{body}}"
+customize.schema_pattern = "^(feat|perf|refactor|fix|bugfix|hotfix|dep|build|ci|docs|style|test|BREAKING[\\-\\ ]CHANGE)(?:\\((.*)\\))?!?: (.*)"
+
+# INTERACTIVE WIZARD QUESTIONS
+[[tool.commitizen.customize.questions]]
+type = "list"
+name = "prefix"
+message = "Select the type of change you are committing"
+choices = [
+  { value = "feat", name = "feat: A new feature" },
+  { value = "fix", name = "fix: A bug fix" },
+  { value = "build", name = "build: Build system changes" },
+  { value = "ci", name = "ci: CI configuration changes" },
+  { value = "docs", name = "docs: Documentation changes" },
+  { value = "style", name = "style: Formatting/code style changes" },
+  { value = "test", name = "test: Adding/fixing tests" },
+  { value = "perf", name = "perf: Performance improvements" },
+  { value = "refactor", name = "refactor: Code refactoring" },
+  { value = "dep", name = "dep: Dependency updates" }
+]
+
+[[tool.commitizen.customize.questions]]
+type = "input"
+name = "subject"
+message = "Write a short summary of the code changes:\n"
