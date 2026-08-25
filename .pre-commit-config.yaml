@@ -48,7 +48,7 @@ repos:
     id: trailing-whitespace
     exclude: ^tests/|^.gitignore$
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: v2.27.1
+  rev: v2.28.1
   hooks:
   - name: Python pyproject.toml format - standard configuration file for Python projects
     id: pyproject-fmt
@@ -67,7 +67,7 @@ repos:
     - --line-length
     - '125'
 - repo: https://github.com/pycqa/isort
-  rev: 8.0.1
+  rev: 9.0.0b5
   hooks:
   - name: Python isort - sorts & groups standard library, third-party, and local
     id: isort
