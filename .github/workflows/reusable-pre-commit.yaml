@@ -35,6 +35,14 @@ jobs:
           sudo mv hadolint /usr/bin/
           hadolint --version
 
+      - name: Cache pre-commit
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pre-commit-
+
       - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -52,11 +60,11 @@ jobs:
       - name: Run Bandit (analyze code's Abstract Syntax Tree (AST) to identify common security vulnerabilities)
         shell: bash
         run: |
-          uv run bandit -iii -lll -q  -r src -f custom --msg-template "{abspath}:{line}: {test_id}[bandit]: {severity}: {msg}"
+          uv run --no-sync bandit -iii -lll -q  -r src -f custom --msg-template "{abspath}:{line}: {test_id}[bandit]: {severity}: {msg}"
 
       - name: Run Pysentry (dependency vulnerability scanner)
         shell: bash
-        run: uv run pysentry-rs --fail-on high --exclude-extra --no-fail-on-unknown --forbid-quarantined
+        run: uv run --no-sync pysentry-rs --fail-on high --exclude-extra --no-fail-on-unknown --forbid-quarantined
 
   add-on-checkov:
     runs-on: ubuntu-latest
