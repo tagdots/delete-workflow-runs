@@ -32,13 +32,13 @@ test-only:
 	@echo "***************************************************************************"
 	@echo "*** Install test dependency-group ONLY"
 	@echo "***************************************************************************"
-	uv sync --only-group test
+	uv sync --no-install-project --only-group test
 
 test-plus:
 	@echo "***************************************************************************"
 	@echo "*** Install dependency-groups for CICD"
 	@echo "***************************************************************************"
-	uv sync --only-group test --only-group security
+	uv sync --no-install-project --only-group test --only-group security
 
 local-dev:
 	@echo "***************************************************************************"
