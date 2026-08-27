@@ -18,7 +18,7 @@ test:
 	@echo "***************************************************************************"
 	@echo "*** Running coverage tests and collect the coverage data"
 	@echo "***************************************************************************"
-	uv run coverage run -m pytest -vs
+	uv run coverage run -m pytest -vs tests/
 
 	@echo "\n"
 	@echo "## Create an HTML report of the coverage of the files"
@@ -36,7 +36,7 @@ test-only:
 
 test-plus:
 	@echo "***************************************************************************"
-	@echo "*** Append dependency-groups for CICD"
+	@echo "*** Install dependency-groups for CICD"
 	@echo "***************************************************************************"
 	uv sync --only-group test --only-group security
 
