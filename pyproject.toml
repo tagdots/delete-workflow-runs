@@ -22,7 +22,7 @@ classifiers = [
 dependencies = [
   "click~=8.4.2",
   "pandas~=3.0.5",
-  "pygithub~=2.9.1",
+  "pygithub>=2.9.1,<2.11.0",
   "rich~=15.0.0",
 ]
 urls.Changelog = "https://github.com/tagdots/delete-workflow-runs/blob/main/CHANGELOG.md"
