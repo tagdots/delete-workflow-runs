@@ -7,7 +7,7 @@ _.python.venv = { path = ".venv", create = true, uv_create_args = ["--seed"] }
 
 [tasks.install_deps]
 description = "Instantly sync pyproject.toml dependencies via uv"
-run = "uv sync"
+run = "uv sync --frozen"
 hide = true
 
 [hooks]
