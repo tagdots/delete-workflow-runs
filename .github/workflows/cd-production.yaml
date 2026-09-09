@@ -10,7 +10,7 @@ env:
   PROJECT_NAME: delete-workflow-runs
   PACKAGE_NAME: delete_workflow_runs
   PYTHON_VERSION: "3.14.x"
-  UV_VERSION: "0.12.3"
+  UV_VERSION: "0.12.x"
 
 permissions:
   contents: read
