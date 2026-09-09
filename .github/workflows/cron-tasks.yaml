@@ -9,7 +9,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.14.x"
-  UV_VERSION: "0.12.3"
+  UV_VERSION: "0.12.x"
 
 permissions:
   actions: read
@@ -59,7 +59,7 @@ jobs:
         id: get-coverage-results
         shell: bash
         run: |
-          echo "COV_RUN=${{ steps.run-coverage.outcome }}"                         >> "$GITHUB_OUTPUT"
+          echo "COV_RUN=${{ steps.run-coverage.outcome }}" >> "$GITHUB_OUTPUT"
           echo "COV_PER=$(uv run coverage report | grep TOTAL | awk '{print $6}')" >> "$GITHUB_OUTPUT"
 
       - name: Upload coverage # https://github.com/marketplace/actions/upload-artifact
@@ -149,7 +149,7 @@ jobs:
         with:
           repo-url: ${{ github.server_url }}/${{ github.repository }}
           max-idle-days: 10
-          exclude-branches: "badges"
+          exclude-branches: "badges,dev"
           dry-run: false
 
   update-pre-commit:
@@ -160,10 +160,17 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Generate a token from Github App # https://github.com/marketplace/actions/create-github-app-token
+        id: generate-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.SECRET_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SECRET_GITHUB_APP_PEM_FILE }}
+
       - name: Run update-pre-commit # https://github.com/tagdots/update-pre-commit-action
         id: update-pre-commit
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         uses: tagdots/update-pre-commit-action@a80688d12cf761973e340674bcf552af366afba5 # 1.0.28
         with:
           file: .pre-commit-config.yaml
