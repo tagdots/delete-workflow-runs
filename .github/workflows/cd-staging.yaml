@@ -13,7 +13,7 @@ env:
   PROJECT_NAME: delete-workflow-runs
   PACKAGE_NAME: delete_workflow_runs
   PYTHON_VERSION: "3.14.x"
-  UV_VERSION: "0.12.3"
+  UV_VERSION: "0.12.x"
 
 permissions:
   contents: read
@@ -119,7 +119,6 @@ jobs:
           python -c "from ${{ env.PACKAGE_NAME }} import __version__; print(__version__)"
 
   notify-slack:
-    if: always()
     needs: [push-git-tag, publish-TestPyPI, validate-TestPyPI]
     runs-on: ubuntu-latest
 
