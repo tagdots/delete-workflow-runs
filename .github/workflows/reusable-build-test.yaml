@@ -19,7 +19,7 @@ env:
   PACKAGE_NAME: delete_workflow_runs
   PYTHON_VERSION: "3.14.x"
   TERRAFORM_VERSION: "1.15.x"
-  UV_VERSION: "0.12.3"
+  UV_VERSION: "0.12.x"
 
 permissions:
   contents: read
@@ -55,7 +55,7 @@ jobs:
 
       - name: Install packages
         shell: bash
-        run: uv sync
+        run: uv sync --frozen
 
       - name: Set build version
         id: set-build-version
