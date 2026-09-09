@@ -32,18 +32,18 @@ test-only:
 	@echo "***************************************************************************"
 	@echo "*** Install test dependency-group ONLY"
 	@echo "***************************************************************************"
-	uv sync --no-install-project --only-group test
+	uv sync --frozen --no-install-project --only-group test
 
 test-plus:
 	@echo "***************************************************************************"
 	@echo "*** Install dependency-groups for CICD"
 	@echo "***************************************************************************"
-	uv sync --no-install-project --only-group test --only-group security
+	uv sync --frozen --no-install-project --only-group test --only-group security
 
 local-dev:
 	@echo "***************************************************************************"
 	@echo "*** Install all dependencies"
 	@echo "***************************************************************************"
-	uv sync --all-groups
+	uv sync --frozen --all-groups
 
 .PHONY: help build test local-dev test-only test-plus
