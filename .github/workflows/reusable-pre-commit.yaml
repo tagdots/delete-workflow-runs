@@ -44,7 +44,7 @@ jobs:
             ${{ runner.os }}-pre-commit-
 
       - name: Setup UV # https://github.com/marketplace/actions/astral-sh-setup-uv
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: "true"
@@ -75,7 +75,7 @@ jobs:
 
       - name: Run checkov # https://github.com/marketplace/actions/checkov-github-action
         id: checkov
-        uses: bridgecrewio/checkov-action@5659ddea96102e16d8f221b3d8402453c0b1c150 # v12.3121.0
+        uses: bridgecrewio/checkov-action@a8664e3a0549367977f0cda990a34311835c87c0 # v12.3123.0
         with:
           log_level: WARNING
           quiet: false
