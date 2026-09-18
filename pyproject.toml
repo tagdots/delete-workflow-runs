@@ -17,6 +17,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Topic :: Software Development :: Build Tools",
 ]
 dependencies = [
@@ -109,7 +110,9 @@ customize.changelog_pattern = "^(BREAKING[\\-\\ ]CHANGE|feat|perf|refactor|fix|b
 #
 # MESSAGE TEMPLATE (How the wizard formats your final commit message)
 customize.message_template = "{{prefix}}{% if scope %}({{scope}}){% endif %}: {{subject}}\n\n{{body}}"
-customize.schema_pattern = "^(feat|perf|refactor|fix|bugfix|hotfix|dep|build|ci|docs|style|test|BREAKING[\\-\\ ]CHANGE)(?:\\((.*)\\))?!?: (.*)"
+customize.schema_pattern = """\
+  ^(feat|perf|refactor|fix|bugfix|hotfix|dep|build|ci|docs|style|test|BREAKING[\\-\\ ]CHANGE)(?:\\((.*)\\))?!?: (.*)\
+  """
 
 # INTERACTIVE WIZARD QUESTIONS
 [[tool.commitizen.customize.questions]]
