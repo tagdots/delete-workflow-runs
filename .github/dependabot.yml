@@ -26,7 +26,7 @@ updates:
       cronjob: "15 0 * * 0"
     open-pull-requests-limit: 1
     rebase-strategy: "disabled"
-    versioning-strategy: increase
+    versioning-strategy: increase-if-necessary
     groups:
       uv:
         patterns:
