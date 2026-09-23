@@ -21,10 +21,10 @@ classifiers = [
   "Topic :: Software Development :: Build Tools",
 ]
 dependencies = [
-  "click>=8.4.2,<8.6.0",
-  "pandas~=3.0.5",
-  "pygithub>=2.9.1,<2.11.0",
-  "rich~=15.0.0",
+  "click>=8.5.0",
+  "pandas>=3.0.5",
+  "pygithub>=2.10.0",
+  "rich>=15.0.0",
 ]
 urls.Changelog = "https://github.com/tagdots/delete-workflow-runs/blob/main/CHANGELOG.md"
 urls.Documentation = "https://github.com/tagdots/delete-workflow-runs/blob/main/README.md"
