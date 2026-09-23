@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.2.35 (2026-09-22)
+
+
+- docs: Elaborate on DocStrings and add Comments
+- build: fix dependency versioning strategy with flexible bounds
+- fix pyproject-fmt
+- build: fix coverage break
+
 ## 1.2.34 (2026-08-14)
 
 ### Fix
