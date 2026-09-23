@@ -1,7 +1,16 @@
-#!/usr/bin/env python
-
 """
-Purpose: Delete GitHub Action Workflow Runs
+GitHub Action Workflow Run Cleaner
+
+This CLI tool deletes GitHub Actions workflow runs from a repository
+based on either a minimum number of recent runs to keep (min-runs)
+or a maximum age in days (max-days). It also removes runs belonging
+to orphaned (deleted) workflows.
+
+Usage:
+    delete-workflow-runs --repo-url <url> [--min-runs N] [--max-days N] [--dry-run]
+
+Environment:
+    GH_TOKEN - required GitHub personal access token with action write scope.
 """
 
 import concurrent.futures
@@ -33,6 +42,18 @@ from delete_workflow_runs import __version__
 def get_auth() -> Github:
     """
     Creates an instance of Github class to interact with GitHub API
+
+    Returns
+    -------
+    Github
+        Authenticated Github client instance with rate limit verification.
+
+    Raises
+    ------
+    KeyError
+        If GH_TOKEN environment variable is not set.
+    PermissionError
+        If the provided GH_TOKEN is invalid.
     """
     try:
         gh_token = os.environ["GH_TOKEN"]
@@ -41,17 +62,34 @@ def get_auth() -> Github:
         return gh
 
     except KeyError:
-        raise KeyError("GH_TOKEN (environment variable) not found")
+        raise KeyError("GitHub Token - not found")
     except BadCredentialsException:
-        raise PermissionError("Invalid GitHub Token (GH_TOKEN)")
+        raise PermissionError("GitHub Token - bad credential")
 
 
 def get_repo(gh, repo_url: str) -> Repository.Repository:
     """
     Get owner/repo and repo object from pyGitHub to interact with GitHub API
 
-    Parameter(s):
-    repo_url: repository url (e.g. https://github.com/{user/org}/repo.git)
+    Parameters
+    ----------
+    gh : Github
+        Authenticated Github client from get_auth().
+    repo_url : str
+        Repository URL in either HTTPS or SSH format.
+        Examples: ``https://github.com/{user/org}/repo.git`` or
+        ``git@github.com:{user/org}/repo.git``
+
+    Returns
+    -------
+    Repository.Repository
+        pyGitHub Repository object.
+
+    Raises
+    ------
+    ValueError
+        If the URL does not contain a valid GitHub hostname or the
+        repository cannot be found.
     """
     try:
         list_gh_substrings = ["https://github.com", "git@github.com:"]
@@ -72,22 +110,33 @@ def get_repo(gh, repo_url: str) -> Repository.Repository:
         raise ValueError(f"{repo_url} repository not found ({e.status})")
 
 
-def check_user_inputs(min_runs: int, max_days: int) -> bool:
+def check_user_inputs(min_runs: int | None, max_days: int | None) -> bool:
     """
-    Check user inputs
+    Validate user-provided min-runs and max-days inputs.
 
-    Parameter(s):
-    min_runs: minimum number of runs to keep in a workflow
-            : e.g. "min_runs = 5" means that all runs except the latest 5 in a workflow will be deleted
-    max_days: maximum number of days to keep the run in a workflow
-            : e.g. "max_days = 5" means that all runs oldr than 5 days in a workflow will be deleted
+    The function enforces that exactly one of min-runs or max-days is provided,
+    and that any provided value is a non-negative integer.
+
+    Parameters
+    ----------
+    min_runs : int or None
+        Minimum number of recent runs to keep in a workflow.
+        For example, ``min_runs=5`` keeps only the latest 5 runs per workflow.
+    max_days : int or None
+        Maximum age (in days) of workflow runs to keep.
+        For example, ``max_days=5`` deletes runs older than 5 days.
+
+    Returns
+    -------
+    bool
+        ``True`` if inputs are valid, ``False`` otherwise.
     """
     if min_runs is not None and max_days is not None:
         print("❌ Error: only enter one of min-runs or max-days")
         return False
 
     if min_runs is None and max_days is None:
-        print("❌ Error: enter at lease one of min-runs or max-days")
+        print("❌ Error: enter at least one of min-runs or max-days")
         return False
 
     if min_runs is not None and (not isinstance(min_runs, int) or min_runs < 0):
@@ -103,10 +152,21 @@ def check_user_inputs(min_runs: int, max_days: int) -> bool:
 
 def get_core_api_rate_limit(gh: Github) -> Tuple[int, datetime]:
     """
-    Get Core API Rate Limit (rate limit endpoint itself does not consume regular API quota)
+    Get Core API Rate Limit information.
 
-    Parameter(s):
-    gh: github class object from get_auth()
+    The rate limit endpoint itself does not consume regular API quota.
+
+    Parameters
+    ----------
+    gh : Github
+        Authenticated Github client from get_auth().
+
+    Returns
+    -------
+    Tuple[int, datetime]
+        A tuple of ``(remaining_requests, reset_time)`` where
+        ``remaining_requests`` is the number of API calls left and
+        ``reset_time`` is the UTC datetime when the rate limit resets.
     """
     RateLimitOverview = gh.get_rate_limit()
     core = RateLimitOverview.resources.core
@@ -122,17 +182,24 @@ def get_core_api_rate_limit(gh: Github) -> Tuple[int, datetime]:
 
 def get_all_workflow_runs(repo: Repository.Repository) -> pd.DataFrame:
     """
-    Get all workflow runs
+    Fetch all workflow runs from a GitHub repository using parallel threads.
 
-    Parameter(s):
-    repo: github repository object
+    Parameters
+    ----------
+    repo : Repository.Repository
+        pyGitHub Repository object.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with columns ``workflow_id``, ``run_id``, ``created_at``,
+        and ``name`` for each workflow run found.
     """
     print("💪 Gathering All Workflow Runs...")
 
     wf_runs = repo.get_workflow_runs()
     total_count = wf_runs.totalCount
-    # per_page = 100 # total_pages = (total_count + per_page - 1) // per_page
-    # print(f"Found {total_count} workflow runs across {total_pages} pages (100 runs/ page).")
+    print(f"Found {total_count} workflow runs.")
 
     all_runs = []
     threads = []
@@ -160,14 +227,26 @@ def append_runs_to_list(
     all_runs: list, workflow_id: int, run_id: int, created_at: datetime, name: str, lock: threading.Lock
 ):
     """
-    Append workflow runs to all_runs list
+    Thread-safe helper to append a single workflow run dict to a shared list.
 
-    Parameter(s):
-    all_runs   : a list that contains all workflow runs
-    created_at : timestamp of workflow run created at
-    name       : workflow run name from workflow path
-    run_id     : run id from workflow
-    workflow_id: workflow id from all_runs
+    Parameters
+    ----------
+    all_runs : list
+        Shared list that accumulates all workflow run records.
+    workflow_id : int
+        Workflow identifier from the GitHub API.
+    run_id : int
+        Unique run identifier from the workflow.
+    created_at : datetime
+        Timestamp of when the workflow run was created.
+    name : str
+        Workflow run name derived from the workflow file path.
+    lock : threading.Lock
+        Lock for thread-safe access to ``all_runs``.
+
+    Returns
+    -------
+    None
     """
     with lock:
         all_runs.append({"workflow_id": workflow_id, "run_id": run_id, "created_at": created_at, "name": name})
@@ -175,11 +254,21 @@ def append_runs_to_list(
 
 def break_down_df_all_runs(repo: Repository.Repository, df_all_runs: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    break down all workflow runs
+    Separate workflow runs into orphan runs (deleted workflows) and active runs.
 
-    Parameter(s):
-    repo       : github repository object
-    df_all_runs: pandas dataframe that contains all workflow runs
+    Parameters
+    ----------
+    repo : Repository.Repository
+        GitHub repository object.
+    df_all_runs : pd.DataFrame
+        DataFrame containing all workflow runs.
+
+    Returns
+    -------
+    Tuple[pd.DataFrame, pd.DataFrame]
+        ``(df_orphan_runs, df_active_runs)`` where:
+        - ``df_orphan_runs``: Runs belonging to non-existent workflows
+        - ``df_active_runs``: Runs belonging to existing workflows
     """
     set_unique_all_workflow_ids = set(df_all_runs["workflow_id"].unique().tolist())
 
@@ -209,12 +298,21 @@ def break_down_df_all_runs(repo: Repository.Repository, df_all_runs: pd.DataFram
 
 def delete_orphan_workflow_runs(repo: Repository.Repository, dry_run: bool, df_orphan_runs: pd.DataFrame) -> int:
     """
-    Delete orphan workflow runs
+    Delete orphan workflow runs (runs belonging to deleted workflows).
 
-    Parameter(s):
-    repo          : github repository object
-    dry_run       : dry run
-    df_orphan_runs: pandas dataframe that contains orphan workflow runs
+    Parameters
+    ----------
+    repo : Repository.Repository
+        GitHub repository object.
+    dry_run : bool
+        If True, only count runs without deleting.
+    df_orphan_runs : pd.DataFrame
+        DataFrame containing orphan workflow runs.
+
+    Returns
+    -------
+    int
+        Number of orphan workflow runs deleted (or would be deleted in dry-run mode).
     """
     console = Console()
     list_run_id = df_orphan_runs["run_id"].to_list()
@@ -237,14 +335,27 @@ def delete_orphan_workflow_runs(repo: Repository.Repository, dry_run: bool, df_o
 
 def delete_active_workflow_runs_min_runs(repo: Repository.Repository, dry_run: bool, min_runs: int, df: pd.DataFrame) -> int:
     """
-    Delete active workflow runs using min-runs option
+    Delete active workflow runs exceeding the minimum run threshold.
 
-    Parameter(s):
-    repo      : github repository object
-    dry_run   : dry run
-    df        : active workflow runs in pandas dataframe
-    min_runs  : minimum number of runs to keep in a workflow
-              : e.g. "min_runs = 5" means that all runs except the latest 5 in a workflow will be deleted
+    Groups runs by workflow name, then deletes runs from each group
+    that exceed the specified minimum number of runs to keep.
+
+    Parameters
+    ----------
+    repo : Repository.Repository
+        GitHub repository object.
+    dry_run : bool
+        If True, only count runs without deleting.
+    min_runs : int
+        Minimum number of recent runs to keep per workflow.
+        For example, ``min_runs=5`` keeps only the latest 5 runs per workflow.
+    df : pd.DataFrame
+        DataFrame containing active workflow runs.
+
+    Returns
+    -------
+    int
+        Total number of active workflow runs deleted (or would be deleted in dry-run mode).
     """
     console = Console()
     delete_active_workflow_runs_count = 0
@@ -315,14 +426,27 @@ def delete_active_workflow_runs_min_runs(repo: Repository.Repository, dry_run: b
 
 def delete_active_workflow_runs_max_days(repo: Repository.Repository, dry_run: bool, max_days: int, df: pd.DataFrame) -> int:
     """
-    Delete active workflow runs using max-days option
+    Delete active workflow runs older than the specified number of days.
 
-    Parameter(s):
-    repo      : github repository object
-    dry_run   : dry run
-    df        : active workflow runs in pandas dataframe
-    max_days  : maximum number of days to keep the run in a workflow
-              : e.g. "max_days = 5" means that all runs oldr than 5 days in a workflow will be deleted
+    Groups runs by workflow name, then deletes runs from each group
+    that are older than the specified maximum number of days.
+
+    Parameters
+    ----------
+    repo : Repository.Repository
+        GitHub repository object.
+    dry_run : bool
+        If True, only count runs without deleting.
+    max_days : int
+        Maximum age in days; runs older than this will be deleted.
+        For example, ``max_days=5`` deletes runs older than 5 days.
+    df : pd.DataFrame
+        DataFrame containing active workflow runs.
+
+    Returns
+    -------
+    int
+        Total number of active workflow runs deleted (or would be deleted in dry-run mode).
     """
     console = Console()
     delete_active_workflow_runs_count = 0
@@ -405,12 +529,26 @@ def delete_active_workflow_runs_max_days(repo: Repository.Repository, dry_run: b
 
 def delete_workflow_runs(count: int, repo: Repository.Repository, workflow_run_id: int) -> int:
     """
-    Delete workflow runs
+    Delete a single workflow run from the repository.
 
-    Parameter(s):
-    count          : number of workflow runs for each workflow namw
-    repo           : github repository object
-    workflow_run_id: github action workflow run id
+    Parameters
+    ----------
+    count : int
+        Total number of workflow runs for the current workflow name (used for progress tracking).
+    repo : Repository.Repository
+        GitHub repository object.
+    workflow_run_id : int
+        GitHub Actions workflow run ID to delete.
+
+    Returns
+    -------
+    int
+        Always returns 1 to indicate one run was processed.
+
+    Raises
+    ------
+    GithubException
+        If the run cannot be deleted (e.g., already deleted or permissions issue).
     """
     try:
         workflow_run = repo.get_workflow_run(workflow_run_id)
@@ -426,16 +564,27 @@ def delete_workflow_runs(count: int, repo: Repository.Repository, workflow_run_i
 
 def get_api_estimate(orphan_runs_count: int, delete_runs_count: int) -> int:
     """
-    Use dry-run to get API Usage Estimate
+    Estimate the number of API calls needed to delete workflow runs.
 
-    Parameter(s):
-    orphan_runs_count: number of orphan workflow runs to delete
-    delete_runs_count: number of active workflow runs to delete
+    Parameters
+    ----------
+    orphan_runs_count : int
+        Number of orphan workflow runs to delete.
+    delete_runs_count : int
+        Number of active workflow runs to delete.
 
-    NOTE:
-    1. this script consumes 3 API limit at the minimum
-    2. every page (100 items) on paginationlist consumes an API call
-    3. "delete workflow run" requires 2 API calls to 1) retrieve the workflow run object 2) call the delete method
+    Returns
+    -------
+    int
+        Estimated total API calls needed for the delete operation.
+
+    Notes
+    -----
+    - This script consumes 3 API calls at minimum.
+    - Every page (100 items) on the pagination list consumes 1 API call.
+    - Deleting a workflow run requires 2 API calls:
+      1) retrieve the workflow run object
+      2) call the delete method
     """
     estimate = ((orphan_runs_count + delete_runs_count) * 2) + ((orphan_runs_count + delete_runs_count) // 100 + 1) + 3
     return estimate
@@ -491,13 +640,24 @@ def write_data_dict(
 @click.option("--max-days", required=False, type=int, help="maximum number of days to keep the run in a workflow")
 @click.version_option(version=__version__)
 def main(dry_run, repo_url, min_runs, max_days):
+    """
+    Main entry point for the workflow run deletion CLI.
+
+    Parses command-line arguments, validates inputs, authenticates with GitHub,
+    fetches workflow runs, identifies orphan and active runs, and deletes
+    runs based on the specified criteria (min-runs or max-days).
+
+    Supports dry-run mode to preview deletions without actually removing runs.
+
+    Displays API rate limit information and usage estimates.
+    """
     console = Console()
     print(
         f"\n🚀 Starting to Delete GitHub Action workflows (dry-run: {dry_run}, "
         + f"min-runs: {min_runs}, max-days: {max_days})\n"
     )
 
-    """initialize data"""
+    # Initialize data
     core_remaining = 0
     core_reset = datetime.now() + timedelta(hours=1)
     core_usage_estimate = 0
@@ -509,9 +669,7 @@ def main(dry_run, repo_url, min_runs, max_days):
         repo = get_repo(gh, repo_url)
 
         if check_user_inputs(min_runs, max_days):
-            """
-            get all workflow runs
-            """
+            # Get all workflow runs
             df_all_runs = get_all_workflow_runs(repo)
             if len(df_all_runs) > 0:
                 df_orphan_runs, df_active_runs = break_down_df_all_runs(repo, df_all_runs)
@@ -522,19 +680,15 @@ def main(dry_run, repo_url, min_runs, max_days):
             print(f"Number of orphan workflow runs: {len(df_orphan_runs.index)}")
             print(f"Number of active workflow runs: {len(df_active_runs.index)}\n")
 
-            """
-            delete orphan workflow runs
-            """
+            # Delete orphan workflow runs
             print("\n🔍 Orphan Workflow Runs")
-            print(f"Number of oustanding orphan workflow run(s): {len(df_orphan_runs.index)}")
+            print(f"Number of outstanding orphan workflow run(s): {len(df_orphan_runs.index)}")
             if len(df_orphan_runs.index) > 0:
                 delete_orphan_workflow_runs_count = delete_orphan_workflow_runs(repo, dry_run, df_orphan_runs)
 
-            """
-            delete active workflow runs
-            """
+            # Delete active workflow runs
             print("\n🔍 Active Workflow Runs")
-            print(f"Number of oustanding active workflow run(s): {len(df_active_runs.index)}\n")
+            print(f"Number of outstanding active workflow run(s): {len(df_active_runs.index)}\n")
             if len(df_active_runs.index) > 0:
                 if isinstance(min_runs, int) and min_runs >= 0:
                     delete_active_workflow_runs_count = delete_active_workflow_runs_min_runs(
@@ -550,15 +704,13 @@ def main(dry_run, repo_url, min_runs, max_days):
                     else delete_active_workflow_runs_count
                 )
 
-            """
-            display core api rate limit info and create a usage estimate
-            """
+            # Display core API rate limit info and create a usage estimate
             core_remaining, core_reset = get_core_api_rate_limit(gh)
             if dry_run:
                 core_usage_estimate = get_api_estimate(delete_orphan_workflow_runs_count, delete_active_workflow_runs_count)
 
                 console.print("\n[blue]************************** API Usage Estimate ******************************[/blue]")
-                console.print(f"This delete can consume [red]{core_usage_estimate}[/red] units of your API limit.")
+                console.print(f"This delete command can consume [red]{core_usage_estimate}[/red] units of your API limit.")
                 if (core_remaining * 0.90) > core_usage_estimate:
                     console.print("\nEnough API limit to run this delete now? ✅ yes")
                 else:
@@ -566,9 +718,7 @@ def main(dry_run, repo_url, min_runs, max_days):
                     console.print("[red](segment this delete into multiple runs)[/red]")
                 console.print("[blue]****************************************************************************[/blue]")
 
-        """
-        write data_dict to a file for data feed to integrate with other tools
-        """
+        # Write data_dict to a file for data feed to integrate with other tools
         write_data_dict(
             dry_run,
             repo_url,
