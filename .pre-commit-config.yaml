@@ -1,6 +1,6 @@
 repos:
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.38.0
+  rev: 0.38.1
   hooks:
   - name: Check GitHub Actions Workflows
     id: check-github-workflows
@@ -84,7 +84,7 @@ repos:
     - --skip
     - __init__.py
 - repo: https://github.com/pycqa/flake8
-  rev: 7.3.0
+  rev: 7.4.0
   hooks:
   - name: Python flake8 - flag syntax errors, style violations
     id: flake8
