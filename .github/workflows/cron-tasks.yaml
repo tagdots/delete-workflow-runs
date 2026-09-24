@@ -81,9 +81,9 @@ jobs:
       contents: write
 
     steps:
-      - name: Run setup-badge-action # https://github.com/tagdots/setup-badge-action
+      - name: Run setup-badge # https://github.com/marketplace/actions/setup-badge
         id: badge-coverage
-        uses: tagdots/setup-badge-action@294661aa1f149b59dfe1cd187539eca7f8f0fabf # 1.0.18
+        uses: tagdots/setup-badge@9f61d39dc1c258a684d6f6ddac04d79a51d15144 # 1.2.3
         with:
           badge-name: coverage
           badge-url: https://github.com/${{ github.repository }}/actions/workflows/cron-tasks.yaml
@@ -98,9 +98,9 @@ jobs:
       contents: read
 
     steps:
-      - name: Run delete-workflow-runs # https://github.com/tagdots/delete-workflow-runs
+      - name: Run delete-workflow-runs # https://github.com/marketplace/actions/delete-github-workflow-runs
         id: delete-workflow-runs
-        uses: tagdots/delete-workflow-runs@f2c8c90686b3cca383d91ff02dd97e4b7f052529 # 1.2.34
+        uses: tagdots/delete-workflow-runs@a63410508ae00a97f25514ac373ac99f2a19d6fb # 1.2.35
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -141,9 +141,9 @@ jobs:
       pull-requests: read
 
     steps:
-      - name: Run delete-branches # https://github.com/tagdots/delete-branches
+      - name: Run delete-branches # https://github.com/marketplace/actions/delete-github-branches
         id: delete-branches
-        uses: tagdots/delete-branches@7ab458c4f92b1dcd058cce7ebd57bb88ec6d21ab # 1.2.16
+        uses: tagdots/delete-branches@5b1552f97bafc0fefdb6d5029d568bb272d32f82 # 1.2.17
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -167,11 +167,11 @@ jobs:
           client-id: ${{ secrets.SECRET_GITHUB_APP_CLIENT_ID }}
           private-key: ${{ secrets.SECRET_GITHUB_APP_PEM_FILE }}
 
-      - name: Run update-pre-commit # https://github.com/tagdots/update-pre-commit-action
+      - name: Run update-pre-commit # https://github.com/marketplace/actions/update-pre-commit
         id: update-pre-commit
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-        uses: tagdots/update-pre-commit-action@a80688d12cf761973e340674bcf552af366afba5 # 1.0.28
+        uses: tagdots/update-pre-commit@ee7da5cea23f7a067f3b995653e3c7e60270f21f # 1.3.0
         with:
           file: .pre-commit-config.yaml
           dry-run: false
@@ -208,7 +208,7 @@ jobs:
             echo "WORKFLOW_RESULT=:no_entry:" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Post message to Slack # https://github.com/slackapi/slack-github-action
+      - name: Post message to Slack # https://github.com/marketplace/actions/the-slack-github-action
         uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           method: chat.postMessage
