@@ -48,12 +48,12 @@ repos:
     id: trailing-whitespace
     exclude: ^tests/|^.gitignore$
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: v2.30.0
+  rev: v2.30.3
   hooks:
   - name: Python pyproject.toml format - standard configuration file for Python projects
     id: pyproject-fmt
 - repo: https://github.com/psf/black-pre-commit-mirror
-  rev: 26.5.1
+  rev: 26.10.1
   hooks:
   - name: Python black - format codes
     id: black
