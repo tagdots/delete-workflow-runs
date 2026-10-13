@@ -128,8 +128,8 @@ jobs:
         id: stale-issues-prs
         uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
         with:
-          stale-issue-message: "This issue is stale because it has been open 5 days with no activity. Remove stale label or comment or this will be closed in 3 days after stale"
-          days-before-stale: 5
+          stale-issue-message: "This issue is stale because it has been open 10 days with no activity. Remove stale label or comment or this will be closed in 3 days after stale"
+          days-before-stale: 10
           days-before-close: 3
           delete-branch: true
 
