@@ -4,6 +4,6 @@
 
 _Summary of the issue_
 
-#### Why is this PR created?
+#### Why was this PR created?
 
-_This PR accomplishes the following...._
+_This PR accomplishes the following._
